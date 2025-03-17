@@ -1,7 +1,7 @@
 name = "每日任务系统"
 description = "为玩家提供每日任务，完成后可获得奖励"
 author = "Va6gn"
-version = "1.1.0"
+version = "1.15"
 
 forumthread = ""
 
@@ -20,6 +20,7 @@ icon = "modicon.tex"
 
 server_filter_tags = {
     "每日任务",
+    "Va6gn",
 }
 
 configuration_options = {
@@ -27,11 +28,11 @@ configuration_options = {
         name = "TASK_COUNT",
         label = "每日任务数量",
         options = {
-            {description = "1个任务", data = 1, hover = "默认值"},
+            {description = "1个任务", data = 1},
             {description = "2个任务", data = 2},
-            {description = "3个任务", data = 3}
+            {description = "3个任务", data = 3,hover = "默认超大份"}
         },
-        default = 1
+        default = 3
     },
     {
         name = "TASK_DIFFICULTY",

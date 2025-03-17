@@ -27,6 +27,32 @@ GLOBAL.DAILYTASKS.CONFIG = {
     CHECK_PROGRESS_KEY = CHECK_PROGRESS_KEY
 }
 
+-- 树木砍伐处理函数
+local function OnTreeChop(inst, data)
+    if data and data.action and data.action.id == "CHOP" and 
+       data.target and data.target:HasTag("tree") then
+        -- 普通树
+        if data.target.prefab == "evergreen" or 
+           data.target.prefab == "evergreen_sparse" or
+           data.target.prefab == "marsh_tree" then
+            inst.daily_trees_chopped = (inst.daily_trees_chopped or 0) + 1
+            print("已砍树: " .. inst.daily_trees_chopped)
+        
+        -- 桦树
+        elseif data.target.prefab == "deciduoustree" then
+            inst.daily_birchnut_chopped = (inst.daily_birchnut_chopped or 0) + 1
+            print("已砍桦树: " .. inst.daily_birchnut_chopped)
+        end
+        
+        -- 记录大树
+        if data.target.size and data.target.size == "tall" then
+            inst.daily_large_trees_chopped = (inst.daily_large_trees_chopped or 0) + 1
+            print("已砍大树: " .. inst.daily_large_trees_chopped)
+        end
+    end
+end
+
+-- 杀死生物处理函数
 local function OnKilled(inst, data)
     if not inst.daily_kills then
         inst.daily_kills = {}
@@ -38,6 +64,7 @@ local function OnKilled(inst, data)
             inst.daily_kills[victim.prefab] = 0
         end
         inst.daily_kills[victim.prefab] = inst.daily_kills[victim.prefab] + 1
+        print("已击杀 " .. victim.prefab .. ": " .. inst.daily_kills[victim.prefab])
         
         -- 检查是否是boss
         if victim:HasTag("epic") or 
@@ -62,7 +89,7 @@ local function OnKilled(inst, data)
             end
             
             inst.daily_bosses_killed[victim.prefab] = inst.daily_bosses_killed[victim.prefab] + 1
-            print("已击杀Boss: " .. victim.prefab)
+            print("已击杀Boss " .. victim.prefab .. ": " .. inst.daily_bosses_killed[victim.prefab])
         end
     end
 end
@@ -109,6 +136,14 @@ local function OnPlayerSpawn(inst)
     inst.daily_health_restored = 0
     inst.daily_sanity_restored = 0
     inst.daily_hunger_restored = 0
+    inst.daily_birchnut_chopped = 0
+    inst.daily_large_trees_chopped = 0
+    inst.daily_ocean_fish_caught = 0
+    inst.daily_special_fish_caught = 0
+    inst.daily_veggie_foods_cooked = 0
+    inst.daily_seafood_foods_cooked = 0
+    inst.daily_treasures_dug = 0
+    inst.daily_areas_discovered = 0
     
     -- 监听杀死生物事件
     inst:ListenForEvent("killed", OnKilled)
@@ -166,19 +201,46 @@ local function OnPlayerSpawn(inst)
     -- 监听采矿事件
     inst:ListenForEvent("finishedwork", function(inst, data)
         if data and data.target and data.target.prefab then
-            if data.target.prefab == "rock1" or 
-               data.target.prefab == "rock2" or 
-               data.target.prefab == "rock_flintless" then
-                inst.daily_rocks_mined = (inst.daily_rocks_mined or 0) + 1
-                print("已采矿: " .. inst.daily_rocks_mined)
-            elseif data.target.prefab == "goldnugget" or 
-                   data.target.prefab == "rock_gold" then
+            print("完成工作: " .. data.target.prefab) -- 添加调试信息
+            
+            -- 金矿实际上是rock2
+            if data.target.prefab == "rock2" then
                 inst.daily_gold_mined = (inst.daily_gold_mined or 0) + 1
                 print("已采金: " .. inst.daily_gold_mined)
-            elseif data.target.prefab == "marble" or 
-                   data.target.prefab == "rock_ice" then
+            
+            -- 普通石头
+            elseif data.target.prefab == "rock1" or 
+                   data.target.prefab == "rocks" or
+                   data.target.prefab == "rock_flintless" then
+                inst.daily_rocks_mined = (inst.daily_rocks_mined or 0) + 1
+                print("已采矿: " .. inst.daily_rocks_mined)
+            
+            -- 大理石和冰
+            elseif data.target.prefab == "rock_ice" or
+                   data.target.prefab == "marbletree" or
+                   data.target.prefab == "marblepillar" or
+                   data.target.prefab == "marble" then
                 inst.daily_marble_mined = (inst.daily_marble_mined or 0) + 1
-                print("已采大理石: " .. inst.daily_marble_mined)
+                print("已采大理石/冰: " .. inst.daily_marble_mined)
+            end
+        end
+    end)
+    
+    -- 再添加一个更全面的工作完成事件处理器
+    inst:ListenForEvent("working", function(inst, data)
+        if data and data.target then
+            if data.target:HasTag("boulder") then
+                local target_prefab = data.target.prefab
+                print("正在挖掘: " .. target_prefab)
+                
+                -- 处理不同类型的石头
+                if string.find(target_prefab, "gold") then
+                    -- 这是金矿
+                    if data.action == GLOBAL.ACTIONS.MINE then
+                        inst.daily_gold_mined = (inst.daily_gold_mined or 0) + 0.25 -- 通常需要4次才能完成
+                        print("采金进度: " .. inst.daily_gold_mined)
+                    end
+                end
             end
         end
     end)
@@ -287,43 +349,150 @@ local function OnPlayerSpawn(inst)
             print("已收集 " .. item_type .. ": " .. inst.daily_items_collected[item_type])
         end
     end)
+
+    -- 监听砍桦树事件
+    inst:ListenForEvent("performaction", function(inst, data)
+        if data and data.action and data.action.id == "CHOP" and 
+           data.target and data.target.prefab == "deciduoustree" then
+            inst.daily_birchnut_chopped = (inst.daily_birchnut_chopped or 0) + 1
+            print("已砍桦树: " .. inst.daily_birchnut_chopped)
+        end
+    end)
+
+    -- 监听砍大树事件
+    local function OnTreeChop(inst, chopper)
+        if chopper and chopper:HasTag("player") then
+            if inst.size and inst.size == "tall" then
+                chopper.daily_large_trees_chopped = (chopper.daily_large_trees_chopped or 0) + 1
+                print("已砍大树: " .. chopper.daily_large_trees_chopped)
+            end
+        end
+    end
+
+    -- 为海钓添加监听
+    inst:ListenForEvent("fishingcollect", function(inst, data)
+        if data and data.fish then
+            if data.fish.prefab and string.find(data.fish.prefab, "oceanfish") then
+                inst.daily_ocean_fish_caught = (inst.daily_ocean_fish_caught or 0) + 1
+                print("已海钓: " .. inst.daily_ocean_fish_caught)
+            end
+            
+            -- 特殊鱼
+            if data.fish.prefab and (
+               data.fish.prefab == "oceanfish_medium_8" or -- 彩虹鳟鱼
+               data.fish.prefab == "oceanfish_medium_3") then -- 花纹鳄鱼
+                inst.daily_special_fish_caught = (inst.daily_special_fish_caught or 0) + 1
+                print("已钓特殊鱼: " .. inst.daily_special_fish_caught)
+            end
+        end
+    end)
+
+    -- 监听烹饪素食料理
+    inst:ListenForEvent("donecooking", function(inst, data)
+        if data and data.product then
+            if data.product.prefab == "ratatouille" or 
+               data.product.prefab == "fruitmedley" or
+               data.product.prefab == "jammypreserves" or
+               data.product.prefab == "dragonpie" or
+               data.product.prefab == "trailmix" or
+               data.product.prefab == "butterflymuffin" or
+               data.product.prefab == "vegstinger" then
+                inst.daily_veggie_foods_cooked = (inst.daily_veggie_foods_cooked or 0) + 1
+                print("已烹饪素食料理: " .. inst.daily_veggie_foods_cooked)
+            end
+            
+            if data.product.prefab == "fishsticks" or
+               data.product.prefab == "fishtacos" or
+               data.product.prefab == "californiaroll" or
+               data.product.prefab == "seafoodgumbo" or
+               data.product.prefab == "surfnturf" then
+                inst.daily_seafood_foods_cooked = (inst.daily_seafood_foods_cooked or 0) + 1
+                print("已烹饪海鲜料理: " .. inst.daily_seafood_foods_cooked)
+            end
+        end
+    end)
+
+    -- 监听挖宝事件
+    inst:ListenForEvent("performaction", function(inst, data)
+        if data and data.action and data.action.id == "DIG" then
+            if data.target and (
+               data.target.prefab == "buriedtreasure" or
+               (data.target.components and data.target.components.workable and 
+                data.target.components.workable.action == GLOBAL.ACTIONS.DIG and
+                math.random() < 0.2)) then -- 有20%几率算作宝藏
+                inst.daily_treasures_dug = (inst.daily_treasures_dug or 0) + 1
+                print("已挖掘宝藏: " .. inst.daily_treasures_dug)
+            end
+        end
+    end)
+
+    -- 监听探索新区域，使用正确的Vector3引用
+    inst:DoPeriodicTask(3, function()
+        -- 使用玩家位置变化来代替地图API
+        if not inst.last_position then
+            inst.last_position = GLOBAL.Vector3(inst.Transform:GetWorldPosition())
+            inst.daily_areas_discovered = 0
+        else
+            local current_pos = GLOBAL.Vector3(inst.Transform:GetWorldPosition())
+            local dist = inst.last_position:DistSq(current_pos)
+            
+            -- 如果距离超过一定值，认为探索了新区域
+            if dist > 2500 then -- 50单位的距离的平方
+                inst.daily_areas_discovered = (inst.daily_areas_discovered or 0) + 1
+                print("已探索新区域: " .. inst.daily_areas_discovered)
+                inst.last_position = current_pos
+            end
+        end
+    end)
 end
 
 -- 当玩家生成时添加组件
 AddPlayerPostInit(OnPlayerSpawn)
 
--- 添加检查任务的命令
-GLOBAL.TheInput:AddKeyDownHandler(GLOBAL[CHECK_TASK_KEY], function()
-    if GLOBAL.ThePlayer and GLOBAL.ThePlayer.components.dailytasks then
-        local dailytasks = GLOBAL.ThePlayer.components.dailytasks
-        local msg = "当前任务:\n"
+-- 使用ActionHandler处理键盘输入，兼容洞穴
+AddModRPCHandler("DailyTasks", "CheckTasks", function(player)
+    if player and player.components.dailytasks then
+        -- 显示当前任务
+        local tasks = player.components.dailytasks
         
-        if dailytasks.current_tasks and #dailytasks.current_tasks > 0 then
-            for i, task in ipairs(dailytasks.current_tasks) do
-                local status = dailytasks.tasks_completed[i] and "[已完成]" or "[未完成]"
+        local msg = "当前每日任务：\n"
+        
+        if tasks.config.TASK_COUNT > 1 and #tasks.current_tasks > 0 then
+            -- 多任务模式
+            for i, task in ipairs(tasks.current_tasks) do
                 local desc = type(task.description) == "function" and task.description() or task.description
                 local reward = type(task.reward_description) == "function" and task.reward_description() or task.reward_description
-                msg = msg .. status .. " " .. task.name .. ": " .. desc .. "\n奖励: " .. reward .. "\n\n"
+                local status = tasks.tasks_completed[i] and "已完成" or "未完成"
+                
+                msg = msg .. "#" .. i .. ": " .. task.name .. "\n"
+                msg = msg .. desc .. "\n"
+                msg = msg .. "奖励: " .. reward .. "\n"
+                msg = msg .. "状态: " .. status .. "\n\n"
             end
-        else if dailytasks.current_task then
-            local status = dailytasks.task_completed and "[已完成]" or "[未完成]"
-            local desc = type(dailytasks.current_task.description) == "function" and dailytasks.current_task.description() or dailytasks.current_task.description
-            local reward = type(dailytasks.current_task.reward_description) == "function" and dailytasks.current_task.reward_description() or dailytasks.current_task.reward_description
-            msg = msg .. status .. " " .. dailytasks.current_task.name .. ": " .. desc .. "\n奖励: " .. reward
+        else if tasks.current_task then
+            -- 单任务模式
+            local desc = type(tasks.current_task.description) == "function" and tasks.current_task.description() or tasks.current_task.description
+            local reward = type(tasks.current_task.reward_description) == "function" and tasks.current_task.reward_description() or tasks.current_task.reward_description
+            local status = tasks.task_completed and "已完成" or "未完成"
+            
+            msg = msg .. tasks.current_task.name .. "\n"
+            msg = msg .. desc .. "\n"
+            msg = msg .. "奖励: " .. reward .. "\n"
+            msg = msg .. "状态: " .. status
         else
-            msg = "当前没有任务"
+            msg = msg .. "暂无任务"
         end
         end
         
-        GLOBAL.ThePlayer.components.talker:Say(msg)
+        if player.components.talker then
+            player.components.talker:Say(msg)
+        end
     end
 end)
 
--- 添加显示任务进度的命令
-GLOBAL.TheInput:AddKeyDownHandler(GLOBAL[CHECK_PROGRESS_KEY], function()
-    if GLOBAL.ThePlayer then
-        local player = GLOBAL.ThePlayer
-        local msg = "任务进度:\n"
+AddModRPCHandler("DailyTasks", "CheckProgress", function(player)
+    if player then
+        local msg = "任务进度：\n"
         
         if player.daily_trees_chopped then
             msg = msg .. "已砍树: " .. player.daily_trees_chopped .. "\n"
@@ -338,7 +507,7 @@ GLOBAL.TheInput:AddKeyDownHandler(GLOBAL[CHECK_PROGRESS_KEY], function()
         end
         
         if player.daily_marble_mined then
-            msg = msg .. "已采大理石: " .. player.daily_marble_mined .. "\n"
+            msg = msg .. "已开采大理石: " .. player.daily_marble_mined .. "\n"
         end
         
         if player.daily_fish_caught then
@@ -350,7 +519,7 @@ GLOBAL.TheInput:AddKeyDownHandler(GLOBAL[CHECK_PROGRESS_KEY], function()
         end
         
         if player.daily_foods_cooked then
-            msg = msg .. "已烹饪: " .. player.daily_foods_cooked .. "\n"
+            msg = msg .. "已烹饪食物: " .. player.daily_foods_cooked .. "\n"
         end
         
         if player.daily_gourmet_foods_cooked then
@@ -359,10 +528,6 @@ GLOBAL.TheInput:AddKeyDownHandler(GLOBAL[CHECK_PROGRESS_KEY], function()
         
         if player.daily_meat_foods_cooked then
             msg = msg .. "已烹饪肉类食物: " .. player.daily_meat_foods_cooked .. "\n"
-        end
-        
-        if player.daily_items_planted then
-            msg = msg .. "已种植: " .. player.daily_items_planted .. "\n"
         end
         
         if player.daily_kills then
@@ -393,9 +558,66 @@ GLOBAL.TheInput:AddKeyDownHandler(GLOBAL[CHECK_PROGRESS_KEY], function()
             end
         end
         
-        player.components.talker:Say(msg)
+        if player.daily_birchnut_chopped then
+            msg = msg .. "已砍桦树: " .. player.daily_birchnut_chopped .. "\n"
+        end
+        
+        if player.daily_large_trees_chopped then
+            msg = msg .. "已砍大树: " .. player.daily_large_trees_chopped .. "\n"
+        end
+        
+        if player.daily_ocean_fish_caught then
+            msg = msg .. "已海钓: " .. player.daily_ocean_fish_caught .. "\n"
+        end
+        
+        if player.daily_special_fish_caught then
+            msg = msg .. "已钓特殊鱼: " .. player.daily_special_fish_caught .. "\n"
+        end
+        
+        if player.daily_veggie_foods_cooked then
+            msg = msg .. "已烹饪素食料理: " .. player.daily_veggie_foods_cooked .. "\n"
+        end
+        
+        if player.daily_seafood_foods_cooked then
+            msg = msg .. "已烹饪海鲜料理: " .. player.daily_seafood_foods_cooked .. "\n"
+        end
+        
+        if player.daily_treasures_dug then
+            msg = msg .. "已挖掘宝藏: " .. player.daily_treasures_dug .. "\n"
+        end
+        
+        if player.daily_areas_discovered then
+            msg = msg .. "已探索新区域: " .. player.daily_areas_discovered .. "\n"
+        end
+        
+        if player.components.talker then
+            player.components.talker:Say(msg)
+        end
     end
 end)
+
+-- 使用客户端RPC调用处理键盘输入
+local function SetupKeyHandlers(inst)
+    -- 这个函数会在玩家登录游戏时执行
+    
+    -- 检查任务键
+    local check_task_key = GLOBAL.DAILYTASKS.CONFIG.CHECK_TASK_KEY or "KEY_R"
+    GLOBAL.TheInput:AddKeyDownHandler(GLOBAL[check_task_key], function()
+        if GLOBAL.ThePlayer then
+            SendModRPCToServer(MOD_RPC["DailyTasks"]["CheckTasks"])
+        end
+    end)
+    
+    -- 检查进度键
+    local check_progress_key = GLOBAL.DAILYTASKS.CONFIG.CHECK_PROGRESS_KEY or "KEY_F"
+    GLOBAL.TheInput:AddKeyDownHandler(GLOBAL[check_progress_key], function()
+        if GLOBAL.ThePlayer then
+            SendModRPCToServer(MOD_RPC["DailyTasks"]["CheckProgress"])
+        end
+    end)
+end
+
+AddPlayerPostInit(SetupKeyHandlers)
 
 -- 导出全局函数，可以在其他地方使用
 GLOBAL.DAILYTASKS.GetTaskList = function()
@@ -423,13 +645,6 @@ GLOBAL.DAILYTASKS.GetTaskList = function()
         "保持理智任务",
         "保持饱腹任务"
     }
-end
-
--- 监听树木砍伐事件
-local function OnTreeChop(inst, chopper)
-    if chopper and chopper:HasTag("player") and chopper.daily_trees_chopped ~= nil then
-        chopper.daily_trees_chopped = chopper.daily_trees_chopped + 1
-    end
 end
 
 -- 为所有树添加砍伐监听器
