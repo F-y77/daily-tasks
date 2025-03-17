@@ -87,5 +87,14 @@ configuration_options = {
             {description = "V键", data = "KEY_V"}
         },
         default = "KEY_F"
+    },
+    {
+        name = "DEVELOPER_MODE",
+        label = "开发者模式",
+        options = {
+            {description = "关闭", data = false, hover = "禁用调试功能"},
+            {description = "开启", data = true, hover = "启用F1调试功能，查看日志。"}
+        },
+        default = false
     }
 } 

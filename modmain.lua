@@ -9,6 +9,9 @@ local SHOW_NOTIFICATIONS = GetModConfigData("SHOW_NOTIFICATIONS") or true
 local CHECK_TASK_KEY = GetModConfigData("CHECK_TASK_KEY") or "KEY_T"
 local CHECK_PROGRESS_KEY = GetModConfigData("CHECK_PROGRESS_KEY") or "KEY_Y"
 
+-- 获取开发者模式配置
+local DEVELOPER_MODE = GetModConfigData("DEVELOPER_MODE") or false
+
 -- 根据难度调整任务要求
 local DIFFICULTY_MULTIPLIERS = {
     easy = 0.7,
@@ -24,7 +27,8 @@ GLOBAL.DAILYTASKS.CONFIG = {
     SHOW_NOTIFICATIONS = SHOW_NOTIFICATIONS,
     DIFFICULTY_MULTIPLIER = DIFFICULTY_MULTIPLIERS[TASK_DIFFICULTY] or 1.0,
     CHECK_TASK_KEY = CHECK_TASK_KEY,
-    CHECK_PROGRESS_KEY = CHECK_PROGRESS_KEY
+    CHECK_PROGRESS_KEY = CHECK_PROGRESS_KEY,
+    DEVELOPER_MODE = DEVELOPER_MODE
 }
 
 -- 树木砍伐处理函数
@@ -144,6 +148,7 @@ local function OnPlayerSpawn(inst)
     inst.daily_seafood_foods_cooked = 0
     inst.daily_treasures_dug = 0
     inst.daily_areas_discovered = 0
+    inst.daily_tools_crafted = 0
     
     -- 监听杀死生物事件
     inst:ListenForEvent("killed", OnKilled)
@@ -292,20 +297,45 @@ local function OnPlayerSpawn(inst)
         end
     end)
     
-    -- 监听制作事件
-    inst:ListenForEvent("itemcrafted", function(inst, data)
-        if data and data.item then
+    -- 监听制作物品事件
+    inst:ListenForEvent("builditem", function(inst, data)
+        if data and data.item and data.item.prefab then
+            local item_prefab = data.item.prefab
+            print("制作物品: " .. item_prefab)
+            
+            -- 初始化物品制作统计
             if not inst.daily_items_crafted then
                 inst.daily_items_crafted = {}
             end
             
-            local item_type = data.item.prefab
-            if not inst.daily_items_crafted[item_type] then
-                inst.daily_items_crafted[item_type] = 0
+            if not inst.daily_items_crafted[item_prefab] then
+                inst.daily_items_crafted[item_prefab] = 0
             end
             
-            inst.daily_items_crafted[item_type] = inst.daily_items_crafted[item_type] + 1
-            print("已制作 " .. item_type .. ": " .. inst.daily_items_crafted[item_type])
+            inst.daily_items_crafted[item_prefab] = inst.daily_items_crafted[item_prefab] + 1
+            
+            -- 检查是否是工具
+            local tools = {
+                "axe", "pickaxe", "shovel", "hammer", "pitchfork", "fishingrod", 
+                "goldenaxe", "goldenpickaxe", "goldenshovel", "spear", "tentaclespike",
+                "hambat", "boomerang", "bugnet", "compass", "houndstooth", "torch",
+                "trap", "birdtrap", "wateringcan", "premiumwateringcan"
+            }
+            
+            local is_tool = false
+            for _, tool in ipairs(tools) do
+                if item_prefab == tool then
+                    is_tool = true
+                    break
+                end
+            end
+            
+            if is_tool then
+                print("制作工具: " .. item_prefab)
+                -- 将该次制作记为工具制作
+                inst.daily_tools_crafted = (inst.daily_tools_crafted or 0) + 1
+                print("已制作工具数量: " .. inst.daily_tools_crafted)
+            end
         end
     end)
     
@@ -590,17 +620,19 @@ AddModRPCHandler("DailyTasks", "CheckProgress", function(player)
             msg = msg .. "已探索新区域: " .. player.daily_areas_discovered .. "\n"
         end
         
+        if player.daily_tools_crafted then
+            msg = msg .. "已制作工具: " .. player.daily_tools_crafted .. "\n"
+        end
+        
         if player.components.talker then
             player.components.talker:Say(msg)
         end
     end
 end)
 
--- 使用客户端RPC调用处理键盘输入
+-- 修改SetupKeyHandlers函数，只在开发者模式启用时添加F1调试键
 local function SetupKeyHandlers(inst)
-    -- 这个函数会在玩家登录游戏时执行
-    
-    -- 检查任务键
+    -- 检查任务键和进度键保持不变
     local check_task_key = GLOBAL.DAILYTASKS.CONFIG.CHECK_TASK_KEY or "KEY_R"
     GLOBAL.TheInput:AddKeyDownHandler(GLOBAL[check_task_key], function()
         if GLOBAL.ThePlayer then
@@ -608,13 +640,92 @@ local function SetupKeyHandlers(inst)
         end
     end)
     
-    -- 检查进度键
     local check_progress_key = GLOBAL.DAILYTASKS.CONFIG.CHECK_PROGRESS_KEY or "KEY_F"
     GLOBAL.TheInput:AddKeyDownHandler(GLOBAL[check_progress_key], function()
         if GLOBAL.ThePlayer then
             SendModRPCToServer(MOD_RPC["DailyTasks"]["CheckProgress"])
         end
     end)
+    
+    -- 只在开发者模式下添加F1调试功能
+    if GLOBAL.DAILYTASKS.CONFIG.DEVELOPER_MODE then
+        GLOBAL.TheInput:AddKeyDownHandler(GLOBAL.KEY_F1, function()
+            if GLOBAL.ThePlayer then
+                print("========================")
+                print("每日任务调试信息")
+                print("========================")
+                
+                -- 打印所有统计数据
+                local stats = {
+                    "daily_trees_chopped",
+                    "daily_rocks_mined",
+                    "daily_gold_mined",
+                    "daily_marble_mined",
+                    "daily_fish_caught",
+                    "daily_big_fish_caught",
+                    "daily_foods_cooked",
+                    "daily_gourmet_foods_cooked",
+                    "daily_meat_foods_cooked",
+                    "daily_kills",
+                    "daily_items_collected",
+                    "daily_items_planted",
+                    "daily_structures_built",
+                    "daily_items_crafted",
+                    "daily_bosses_killed",
+                    "daily_birchnut_chopped",
+                    "daily_large_trees_chopped",
+                    "daily_ocean_fish_caught",
+                    "daily_special_fish_caught",
+                    "daily_veggie_foods_cooked",
+                    "daily_seafood_foods_cooked",
+                    "daily_treasures_dug",
+                    "daily_areas_discovered"
+                }
+                
+                for _, stat in ipairs(stats) do
+                    if GLOBAL.ThePlayer[stat] then
+                        if type(GLOBAL.ThePlayer[stat]) == "table" then
+                            print(stat .. ":")
+                            for k, v in pairs(GLOBAL.ThePlayer[stat]) do
+                                print("  " .. k .. ": " .. v)
+                            end
+                        else
+                            print(stat .. ": " .. GLOBAL.ThePlayer[stat])
+                        end
+                    else
+                        print(stat .. ": nil")
+                    end
+                end
+                
+                -- 如果有当前任务，打印任务信息
+                if GLOBAL.ThePlayer.components.dailytasks then
+                    local tasks = GLOBAL.ThePlayer.components.dailytasks
+                    print("当前任务信息:")
+                    
+                    if tasks.config.TASK_COUNT > 1 and #tasks.current_tasks > 0 then
+                        print("多任务模式 - " .. #tasks.current_tasks .. "个任务")
+                        for i, task in ipairs(tasks.current_tasks) do
+                            local completed = tasks.tasks_completed[i] and "已完成" or "未完成"
+                            print("#" .. i .. ": " .. task.name .. " - " .. completed)
+                        end
+                    elseif tasks.current_task then
+                        local completed = tasks.task_completed and "已完成" or "未完成"
+                        print("单任务模式: " .. tasks.current_task.name .. " - " .. completed)
+                    else
+                        print("当前没有任务")
+                    end
+                end
+                
+                print("========================")
+                print("F1调试功能已激活 - 请查看控制台输出")
+                
+                -- 如果玩家有talker组件，显示一个提示
+                if GLOBAL.ThePlayer.components.talker then
+                    GLOBAL.ThePlayer.components.talker:Say("调试信息已输出到控制台")
+                end
+            end
+        end)
+    end
 end
 
 AddPlayerPostInit(SetupKeyHandlers)

@@ -376,7 +376,7 @@ local DailyTasks = Class(function(self, inst)
             name = "采金任务",
             description = function() 
                 local count = math.ceil(1 * self.config.DIFFICULTY_MULTIPLIER)
-                return "挖掘" .. count .. "个金矿" 
+                return "挖掘" .. count .. "个金矿石" 
             end,
             check = function(player) 
                 return player.daily_gold_mined and player.daily_gold_mined >= math.ceil(1 * self.config.DIFFICULTY_MULTIPLIER)
@@ -1062,34 +1062,28 @@ local DailyTasks = Class(function(self, inst)
                 local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
                 return "制作" .. count .. "个工具" 
             end,
-            check = function(player)
+            check = function(player) 
                 local required = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
-                local count = 0
-                
-                if player.daily_items_crafted then
-                    for item_type, num in pairs(player.daily_items_crafted) do
-                        if item_type == "axe" or item_type == "pickaxe" or 
-                           item_type == "shovel" or item_type == "hammer" or 
-                           item_type == "pitchfork" or item_type == "razor" or
-                           item_type == "fishingrod" then
-                            count = count + num
-                        end
-                    end
-                end
-                
-                return count >= required
+                return player.daily_tools_crafted and player.daily_tools_crafted >= required
             end,
-            reward = function(player)
+            reward = function(player) 
                 if player.components.inventory then
-                    local count = math.ceil(10 * self.config.REWARD_MULTIPLIER)
-                    for i=1, count do
-                        player.components.inventory:GiveItem(SpawnPrefab("flint"))
+                    local count = math.ceil(1 * self.config.REWARD_MULTIPLIER)
+                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    if count > 1 then
+                        for i=2, count do
+                            player.components.inventory:GiveItem(SpawnPrefab("cutstone"))
+                        end
                     end
                 end
             end,
             reward_description = function()
-                local count = math.ceil(10 * self.config.REWARD_MULTIPLIER)
-                return count .. "个燧石"
+                local count = math.ceil(1 * self.config.REWARD_MULTIPLIER)
+                if count > 1 then
+                    return "1个金块和" .. (count-1) .. "个石砖"
+                else
+                    return "1个金块"
+                end
             end
         },
         {
