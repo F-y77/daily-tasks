@@ -27,10 +27,16 @@ local DailyTasks = Class(function(self, inst)
     self.tasks = {
         -- 采集任务
         {
-            name = "采集浆果任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Berry Gathering" 
+                    or "采集浆果任务"
+            end,
             description = function() 
                 local count = math.ceil(10 * self.config.DIFFICULTY_MULTIPLIER)
-                return "采集" .. count .. "个浆果" 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"
+                    and "Collect " .. count .. " berries"
+                    or "采集" .. count .. "个浆果" 
             end,
             check = function(player)
                 local required = math.ceil(10 * self.config.DIFFICULTY_MULTIPLIER)
@@ -58,14 +64,22 @@ local DailyTasks = Class(function(self, inst)
             end,
             reward_description = function()
                 local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
-                return count .. "个肉"
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"
+                    and count .. " meat"
+                    or count .. "个肉"
             end
         },
         {
-            name = "采集胡萝卜任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Carrot Gathering" 
+                    or "采集胡萝卜任务"
+            end,
             description = function() 
                 local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
-                return "采集" .. count .. "个胡萝卜" 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"
+                    and "Collect " .. count .. " carrots"
+                    or "采集" .. count .. "个胡萝卜" 
             end,
             check = function(player) 
                 local required = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
@@ -97,14 +111,22 @@ local DailyTasks = Class(function(self, inst)
             end,
             reward_description = function()
                 local count = math.ceil(1 * self.config.REWARD_MULTIPLIER)
-                return count .. "个肉"
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"
+                    and count .. " meat"
+                    or count .. "个肉"
             end
         },
         {
-            name = "采集芦苇任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Reed Gathering" 
+                    or "采集芦苇任务"
+            end,
             description = function() 
                 local count = math.ceil(10 * self.config.DIFFICULTY_MULTIPLIER)
-                return "采集" .. count .. "个芦苇" 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"
+                    and "Collect " .. count .. " reeds"
+                    or "采集" .. count .. "个芦苇" 
             end,
             check = function(player) 
                 local required = math.ceil(10 * self.config.DIFFICULTY_MULTIPLIER)
@@ -136,7 +158,9 @@ local DailyTasks = Class(function(self, inst)
             end,
             reward_description = function()
                 local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
-                return count .. "个莎草纸"
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"
+                    and count .. " papyrus"
+                    or count .. "个莎草纸"
             end
         },
         {
@@ -1303,7 +1327,8 @@ function DailyTasks:CompleteTask(task_index)
         -- 通知玩家
         if self.config.SHOW_NOTIFICATIONS and self.inst.components.talker then
             local reward = type(task.reward_description) == "function" and task.reward_description() or task.reward_description
-            self.inst.components.talker:Say("任务 #" .. task_index .. " 完成！获得奖励: " .. reward)
+            local msg = "任务 #" .. task_index .. " 完成！获得奖励: " .. reward
+            self.inst.components.talker:Say(DAILYTASKS.Translate(msg))
         end
     else
         -- 单任务模式
@@ -1315,7 +1340,8 @@ function DailyTasks:CompleteTask(task_index)
         -- 通知玩家
         if self.config.SHOW_NOTIFICATIONS and self.inst.components.talker then
             local reward = type(self.current_task.reward_description) == "function" and self.current_task.reward_description() or self.current_task.reward_description
-            self.inst.components.talker:Say("任务完成！获得奖励: " .. reward)
+            local msg = "任务完成！获得奖励: " .. reward
+            self.inst.components.talker:Say(DAILYTASKS.Translate(msg))
         end
     end
 end
@@ -1366,10 +1392,12 @@ function DailyTasks:SelectTasks()
                 
                 -- 通知玩家新任务
                 if self.config.SHOW_NOTIFICATIONS and self.inst.components.talker then
+                    local task_name = type(task.name) == "function" and task.name() or task.name
                     local desc = type(task.description) == "function" and task.description() or task.description
                     local reward = type(task.reward_description) == "function" and task.reward_description() or task.reward_description
-                    local season_hint = task.season_hint and ("\n" .. task.season_hint) or ""
-                    self.inst.components.talker:Say("新的每日任务 #" .. i .. ": " .. task.name .. "\n" .. desc .. season_hint .. "\n奖励: " .. reward)
+                    
+                    local msg = "新的每日任务 #" .. i .. ": " .. task_name .. "\n" .. desc .. "\n奖励: " .. reward
+                    self.inst.components.talker:Say(DAILYTASKS.Translate(msg))
                 end
             end
         end
@@ -1404,10 +1432,12 @@ function DailyTasks:SelectTasks()
             
             -- 通知玩家新任务
             if self.config.SHOW_NOTIFICATIONS and self.inst.components.talker then
+                local task_name = type(self.current_task.name) == "function" and self.current_task.name() or self.current_task.name
                 local desc = type(self.current_task.description) == "function" and self.current_task.description() or self.current_task.description
                 local reward = type(self.current_task.reward_description) == "function" and self.current_task.reward_description() or self.current_task.reward_description
-                local season_hint = self.current_task.season_hint and ("\n" .. self.current_task.season_hint) or ""
-                self.inst.components.talker:Say("新的每日任务: " .. self.current_task.name .. "\n" .. desc .. season_hint .. "\n奖励: " .. reward)
+                
+                local msg = "新的每日任务: " .. task_name .. "\n" .. desc .. "\n奖励: " .. reward
+                self.inst.components.talker:Say(DAILYTASKS.Translate(msg))
             end
         end
     end

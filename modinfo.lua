@@ -1,7 +1,7 @@
 name = "每日任务系统"
 description = "为玩家提供每日任务，完成后可获得奖励"
 author = "Va6gn"
-version = "1.177"
+version = "1.178"
 
 forumthread = ""
 
@@ -24,6 +24,16 @@ server_filter_tags = {
 }
 
 configuration_options = {
+    {
+        name = "LANGUAGE",
+        label = "语言/Language",
+        hover = "选择语言/Select language",
+        options = {
+            {description = "中文", data = "zh", hover = "使用中文"},
+            {description = "English", data = "en", hover = "Use English"}
+        },
+        default = "zh"
+    },
     {
         name = "TASK_COUNT",
         label = "每日任务数量",
