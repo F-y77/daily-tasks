@@ -31,11 +31,11 @@ local DailyTasks = Class(function(self, inst)
         {
             name = "采集浆果任务",
             description = function() 
-                local count = math.ceil(5 * self.config.DIFFICULTY_MULTIPLIER)
+                local count = math.ceil(10 * self.config.DIFFICULTY_MULTIPLIER)
                 return "采集" .. count .. "个浆果" 
             end,
-            check = function(player) 
-                local required = math.ceil(5 * self.config.DIFFICULTY_MULTIPLIER)
+            check = function(player)
+                local required = math.ceil(10 * self.config.DIFFICULTY_MULTIPLIER)
                 if player.components.inventory then
                     local count = 0
                     local items = player.components.inventory:FindItems(function(item) 
@@ -43,28 +43,24 @@ local DailyTasks = Class(function(self, inst)
                     end)
                     
                     for _, item in ipairs(items) do
-                        if item.components.stackable then
-                            count = count + item.components.stackable:StackSize()
-                        else
-                            count = count + 1
-                        end
+                        count = count + (item.components.stackable and item.components.stackable:StackSize() or 1)
                     end
                     
                     return count >= required
                 end
                 return false
             end,
-            reward = function(player) 
+            reward = function(player)
                 if player.components.inventory then
                     local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
                     for i=1, count do
-                        player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                        player.components.inventory:GiveItem(SpawnPrefab("meat"))
                     end
                 end
             end,
             reward_description = function()
                 local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
-                return count .. "个金块"
+                return count .. "个肉"
             end
         },
         {
@@ -296,57 +292,6 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         
-        -- 砍树任务
-        {
-            name = "砍树任务",
-            description = function() 
-                local count = math.ceil(5 * self.config.DIFFICULTY_MULTIPLIER)
-                return "砍倒" .. count .. "棵树" 
-            end,
-            check = function(player)
-                local required = math.ceil(5 * self.config.DIFFICULTY_MULTIPLIER)
-                return player.daily_trees_chopped and player.daily_trees_chopped >= required
-            end,
-            reward = function(player)
-                if player.components.inventory then
-                    local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
-                    for i=1, count do
-                        player.components.inventory:GiveItem(SpawnPrefab("log"))
-                    end
-                end
-            end,
-            reward_description = function()
-                local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
-                return count .. "个木头"
-            end
-        },
-        {
-            name = "砍松树任务",
-            description = function() 
-                local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
-                return "砍倒" .. count .. "棵松树" 
-            end,
-            check = function(player)
-                local required = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
-                return player.daily_trees_chopped and player.daily_trees_chopped >= required
-            end,
-            reward = function(player)
-                if player.components.inventory then
-                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
-                    for i=1, count do
-                        player.components.inventory:GiveItem(SpawnPrefab("pinecone"))
-                    end
-                    for i=1, count do
-                        player.components.inventory:GiveItem(SpawnPrefab("log"))
-                    end
-                end
-            end,
-            reward_description = function()
-                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
-                return count .. "个松果和" .. count .. "个木头"
-            end
-        },
-        
         -- 采矿任务
         {
             name = "采矿任务",
@@ -360,16 +305,15 @@ local DailyTasks = Class(function(self, inst)
             end,
             reward = function(player)
                 if player.components.inventory then
-                    local count = math.ceil(1 * self.config.REWARD_MULTIPLIER)
-                    player.components.inventory:GiveItem(SpawnPrefab("nitre"))
-                    for i=1, count*2 do
-                        player.components.inventory:GiveItem(SpawnPrefab("flint"))
+                    local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("rocks"))
                     end
                 end
             end,
             reward_description = function()
-                local count = math.ceil(1 * self.config.REWARD_MULTIPLIER)
-                return "1个硝石和" .. count*2 .. "个燧石"
+                local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
+                return count .. "块石头"
             end
         },
         {
@@ -478,22 +422,6 @@ local DailyTasks = Class(function(self, inst)
                 end
             end,
             reward_description = "1个肉丸"
-        },
-        {
-            name = "烹饪高级食物任务",
-            description = "烹饪一个高级食物",
-            check = function(player)
-                return player.daily_gourmet_foods_cooked and player.daily_gourmet_foods_cooked >= 1
-            end,
-            reward = function(player)
-                if player.components.inventory then
-                    local food = SpawnPrefab("honeynuggets")
-                    if food then
-                        player.components.inventory:GiveItem(food)
-                    end
-                end
-            end,
-            reward_description = "1个蜜汁火腿"
         },
         {
             name = "烹饪肉类食物任务",
@@ -782,52 +710,6 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "砍桦树任务",
-            description = function() 
-                local count = math.ceil(4 * self.config.DIFFICULTY_MULTIPLIER)
-                return "砍倒" .. count .. "棵桦树" 
-            end,
-            check = function(player)
-                local required = math.ceil(4 * self.config.DIFFICULTY_MULTIPLIER)
-                return player.daily_birchnut_chopped and player.daily_birchnut_chopped >= required
-            end,
-            reward = function(player)
-                if player.components.inventory then
-                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
-                    for i=1, count do
-                        player.components.inventory:GiveItem(SpawnPrefab("acorn"))
-                    end
-                end
-            end,
-            reward_description = function()
-                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
-                return count .. "个桦树果"
-            end
-        },
-        {
-            name = "砍大树任务",
-            description = function() 
-                local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
-                return "砍倒" .. count .. "棵完全成长的树" 
-            end,
-            check = function(player)
-                local required = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
-                return player.daily_large_trees_chopped and player.daily_large_trees_chopped >= required
-            end,
-            reward = function(player)
-                if player.components.inventory then
-                    local count = math.ceil(6 * self.config.REWARD_MULTIPLIER)
-                    for i=1, count do
-                        player.components.inventory:GiveItem(SpawnPrefab("log"))
-                    end
-                end
-            end,
-            reward_description = function()
-                local count = math.ceil(6 * self.config.REWARD_MULTIPLIER)
-                return count .. "个木头"
-            end
-        },
-        {
             name = "采集硝石任务",
             description = function() 
                 local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
@@ -969,29 +851,10 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "1个海鲜牛排"
         },
         {
-            name = "钓特殊鱼任务",
-            description = "钓到一条特殊的鱼(如彩虹鳟鱼)",
-            check = function(player)
-                return player.daily_special_fish_caught and player.daily_special_fish_caught >= 1
-            end,
-            reward = function(player)
-                if player.components.inventory then
-                    local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
-                    for i=1, count do
-                        player.components.inventory:GiveItem(SpawnPrefab("fishmeat"))
-                    end
-                end
-            end,
-            reward_description = function()
-                local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
-                return count .. "个鱼肉"
-            end
-        },
-        {
             name = "烹饪素食任务",
             description = function() 
                 local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
-                return "烹饪" .. count .. "个素食料理" 
+                return "烹饪" .. count .. "道素食料理" 
             end,
             check = function(player)
                 local required = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
@@ -999,13 +862,17 @@ local DailyTasks = Class(function(self, inst)
             end,
             reward = function(player)
                 if player.components.inventory then
-                    local food = SpawnPrefab("dragonpie")
-                    if food then
-                        player.components.inventory:GiveItem(food)
+                    -- 使用高级食物任务的奖励
+                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("butter"))
                     end
                 end
             end,
-            reward_description = "1个火龙果派"
+            reward_description = function()
+                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                return count .. "块黄油"
+            end
         },
         {
             name = "烹饪海鲜任务",
@@ -1153,13 +1020,6 @@ function DailyTasks:Init()
         self.inst.daily_fish_caught = (self.inst.daily_fish_caught or 0) + 1
     end)
     
-    self.inst:ListenForEvent("performaction", function(inst, data)
-        if data and data.action and data.action.id == "CHOP" and 
-           data.target and data.target:HasTag("tree") then
-            -- 树木砍伐事件已经在这里处理
-        end
-    end)
-    
     self.inst:ListenForEvent("killed", function(inst, data)
         if data and data.victim then
             local victim_type = data.victim.prefab
@@ -1221,10 +1081,20 @@ function DailyTasks:NewDay()
     
     -- 重置玩家的每日统计
     self.inst.daily_kills = {}
+    
+    -- 初始化所有树木相关计数器
     self.inst.daily_trees_chopped = 0
+    self.inst.daily_evergreen_chopped = 0
+    self.inst.daily_birchnut_chopped = 0
+    self.inst.daily_moon_tree_chopped = 0
+    self.inst.daily_red_mushtree_chopped = 0
+    self.inst.daily_blue_mushtree_chopped = 0
+    self.inst.daily_green_mushtree_chopped = 0
+    
+    -- 其他统计数据重置...
     self.inst.daily_rocks_mined = 0
     self.inst.daily_fish_caught = 0
-    self.inst.daily_foods_cooked = 0
+    -- ...
     
     -- 选择新任务
     if self.config.TASK_COUNT > 1 then

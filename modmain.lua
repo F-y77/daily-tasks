@@ -31,31 +31,6 @@ GLOBAL.DAILYTASKS.CONFIG = {
     DEVELOPER_MODE = DEVELOPER_MODE
 }
 
--- 树木砍伐处理函数
-local function OnTreeChop(inst, data)
-    if data and data.action and data.action.id == "CHOP" and 
-       data.target and data.target:HasTag("tree") then
-        -- 普通树
-        if data.target.prefab == "evergreen" or 
-           data.target.prefab == "evergreen_sparse" or
-           data.target.prefab == "marsh_tree" then
-            inst.daily_trees_chopped = (inst.daily_trees_chopped or 0) + 1
-            print("已砍树: " .. inst.daily_trees_chopped)
-        
-        -- 桦树
-        elseif data.target.prefab == "deciduoustree" then
-            inst.daily_birchnut_chopped = (inst.daily_birchnut_chopped or 0) + 1
-            print("已砍桦树: " .. inst.daily_birchnut_chopped)
-        end
-        
-        -- 记录大树
-        if data.target.size and data.target.size == "tall" then
-            inst.daily_large_trees_chopped = (inst.daily_large_trees_chopped or 0) + 1
-            print("已砍大树: " .. inst.daily_large_trees_chopped)
-        end
-    end
-end
-
 -- 杀死生物处理函数
 local function OnKilled(inst, data)
     if not inst.daily_kills then
@@ -98,18 +73,6 @@ local function OnKilled(inst, data)
     end
 end
 
-local function OnChopTree(inst, data)
-    if data and data.target and data.target:HasTag("tree") and 
-       not data.target:HasTag("stump") and data.action and data.action.id == "CHOP" then
-        print("树被砍倒了！")
-        if not inst.daily_trees_chopped then
-            inst.daily_trees_chopped = 0
-        end
-        inst.daily_trees_chopped = inst.daily_trees_chopped + 1
-        print("已砍树数量: " .. inst.daily_trees_chopped)
-    end
-end
-
 local function OnPlayerSpawn(inst)
     if not GLOBAL.TheWorld.ismastersim then
         return
@@ -140,8 +103,12 @@ local function OnPlayerSpawn(inst)
     inst.daily_health_restored = 0
     inst.daily_sanity_restored = 0
     inst.daily_hunger_restored = 0
+    inst.daily_evergreen_chopped = 0
     inst.daily_birchnut_chopped = 0
-    inst.daily_large_trees_chopped = 0
+    inst.daily_moon_tree_chopped = 0
+    inst.daily_red_mushtree_chopped = 0
+    inst.daily_blue_mushtree_chopped = 0
+    inst.daily_green_mushtree_chopped = 0
     inst.daily_ocean_fish_caught = 0
     inst.daily_special_fish_caught = 0
     inst.daily_veggie_foods_cooked = 0
@@ -152,9 +119,6 @@ local function OnPlayerSpawn(inst)
     
     -- 监听杀死生物事件
     inst:ListenForEvent("killed", OnKilled)
-    
-    -- 监听砍树事件
-    inst:ListenForEvent("performaction", OnChopTree)
     
     -- 监听烹饪事件
     inst:ListenForEvent("donecooking", function(inst, data)
@@ -393,8 +357,8 @@ local function OnPlayerSpawn(inst)
     local function OnTreeChop(inst, chopper)
         if chopper and chopper:HasTag("player") then
             if inst.size and inst.size == "tall" then
-                chopper.daily_large_trees_chopped = (chopper.daily_large_trees_chopped or 0) + 1
-                print("已砍大树: " .. chopper.daily_large_trees_chopped)
+                chopper.daily_trees_chopped = (chopper.daily_trees_chopped or 0) + 1
+                print("已砍大树: " .. chopper.daily_trees_chopped)
             end
         end
     end
@@ -522,7 +486,7 @@ end)
 
 AddModRPCHandler("DailyTasks", "CheckProgress", function(player)
     if player then
-        local msg = "任务进度：\n"
+        local msg = "当前任务进度:\n"
         
         if player.daily_trees_chopped then
             msg = msg .. "已砍树: " .. player.daily_trees_chopped .. "\n"
@@ -550,10 +514,6 @@ AddModRPCHandler("DailyTasks", "CheckProgress", function(player)
         
         if player.daily_foods_cooked then
             msg = msg .. "已烹饪食物: " .. player.daily_foods_cooked .. "\n"
-        end
-        
-        if player.daily_gourmet_foods_cooked then
-            msg = msg .. "已烹饪高级食物: " .. player.daily_gourmet_foods_cooked .. "\n"
         end
         
         if player.daily_meat_foods_cooked then
@@ -588,12 +548,28 @@ AddModRPCHandler("DailyTasks", "CheckProgress", function(player)
             end
         end
         
+        if player.daily_evergreen_chopped then
+            msg = msg .. "已砍常青树: " .. player.daily_evergreen_chopped .. "\n"
+        end
+        
         if player.daily_birchnut_chopped then
             msg = msg .. "已砍桦树: " .. player.daily_birchnut_chopped .. "\n"
         end
         
-        if player.daily_large_trees_chopped then
-            msg = msg .. "已砍大树: " .. player.daily_large_trees_chopped .. "\n"
+        if player.daily_moon_tree_chopped then
+            msg = msg .. "已砍月树: " .. player.daily_moon_tree_chopped .. "\n"
+        end
+        
+        if player.daily_red_mushtree_chopped then
+            msg = msg .. "已砍红蘑菇树: " .. player.daily_red_mushtree_chopped .. "\n"
+        end
+        
+        if player.daily_blue_mushtree_chopped then
+            msg = msg .. "已砍蓝蘑菇树: " .. player.daily_blue_mushtree_chopped .. "\n"
+        end
+        
+        if player.daily_green_mushtree_chopped then
+            msg = msg .. "已砍绿蘑菇树: " .. player.daily_green_mushtree_chopped .. "\n"
         end
         
         if player.daily_ocean_fish_caught then
@@ -672,8 +648,12 @@ local function SetupKeyHandlers(inst)
                     "daily_structures_built",
                     "daily_items_crafted",
                     "daily_bosses_killed",
+                    "daily_evergreen_chopped",
                     "daily_birchnut_chopped",
-                    "daily_large_trees_chopped",
+                    "daily_moon_tree_chopped",
+                    "daily_red_mushtree_chopped",
+                    "daily_blue_mushtree_chopped",
+                    "daily_green_mushtree_chopped",
                     "daily_ocean_fish_caught",
                     "daily_special_fish_caught",
                     "daily_veggie_foods_cooked",
@@ -741,40 +721,18 @@ GLOBAL.DAILYTASKS.GetTaskList = function()
         "狩猎蜘蛛任务",
         "狩猎猪人任务",
         "狩猎蜜蜂任务",
-        "砍树任务",
-        "砍松树任务",
         "采矿任务",
         "采金任务",
         "采集大理石任务",
         "钓鱼任务",
         "钓大鱼任务",
         "烹饪任务",
-        "烹饪高级食物任务",
+        "烹饪素食任务",
         "烹饪肉类食物任务",
+        "烹饪海鲜食物任务",
         "生存任务",
         "保持健康任务",
         "保持理智任务",
         "保持饱腹任务"
     }
-end
-
--- 为所有树添加砍伐监听器
-local function AddChopListener(inst)
-    if inst.components.workable and inst:HasTag("tree") then
-        local oldOnFinish = inst.components.workable.onfinish
-        inst.components.workable.onfinish = function(inst, chopper)
-            OnTreeChop(inst, chopper)
-            if oldOnFinish then
-                oldOnFinish(inst, chopper)
-            end
-        end
-    end
-end
-
--- 为现有树添加监听器
-AddPrefabPostInit("evergreen", AddChopListener)
-AddPrefabPostInit("deciduoustree", AddChopListener)
-AddPrefabPostInit("marsh_tree", AddChopListener)
-AddPrefabPostInit("mushtree_tall", AddChopListener)
-AddPrefabPostInit("mushtree_medium", AddChopListener)
-AddPrefabPostInit("mushtree_small", AddChopListener) 
+end 
