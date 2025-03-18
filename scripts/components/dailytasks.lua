@@ -917,6 +917,291 @@ local DailyTasks = Class(function(self, inst)
                 local count = math.ceil(4 * self.config.REWARD_MULTIPLIER)
                 return count .. "个木板"
             end
+        },
+        {
+            name = "狩猎兔人任务",
+            description = function() 
+                local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
+                return "杀死" .. count .. "个兔人" 
+            end,
+            check = function(player)
+                local required = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
+                return player.daily_kills and player.daily_kills.bunnyman and player.daily_kills.bunnyman >= required
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("carrot"))
+                        player.components.inventory:GiveItem(SpawnPrefab("meat"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                return count .. "个胡萝卜和" .. count .. "个肉"
+            end
+        },
+        {
+            name = "狩猎鱼人任务",
+            description = function() 
+                local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
+                return "杀死" .. count .. "个鱼人" 
+            end,
+            check = function(player)
+                local required = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
+                return player.daily_kills and player.daily_kills.merm and player.daily_kills.merm >= required
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("fish"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                return count .. "条生鱼"
+            end
+        },
+        {
+            name = "狩猎海象任务",
+            description = function() 
+                local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
+                return "杀死" .. count .. "只海象" 
+            end,
+            check = function(player)
+                local required = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
+                return player.daily_kills and player.daily_kills.walrus and player.daily_kills.walrus >= required
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(1 * self.config.REWARD_MULTIPLIER)
+                    player.components.inventory:GiveItem(SpawnPrefab("walrushat"))
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("blowdart_pipe"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(1 * self.config.REWARD_MULTIPLIER)
+                return "1顶贝雷帽和" .. count .. "个吹箭"
+            end,
+            season_hint = "冬季出没"
+        },
+        {
+            name = "狩猎发条骑士任务",
+            description = function() 
+                local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
+                return "杀死" .. count .. "个发条骑士" 
+            end,
+            check = function(player)
+                local required = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
+                return player.daily_kills and player.daily_kills.knight and player.daily_kills.knight >= required
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("gears"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                return count .. "个齿轮"
+            end
+        },
+        {
+            name = "狩猎火鸡任务",
+            description = function() 
+                local count = math.ceil(4 * self.config.DIFFICULTY_MULTIPLIER)
+                return "杀死" .. count .. "只火鸡" 
+            end,
+            check = function(player)
+                local required = math.ceil(4 * self.config.DIFFICULTY_MULTIPLIER)
+                return player.daily_kills and player.daily_kills.perd and player.daily_kills.perd >= required
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("drumstick"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                return count .. "个鸡腿"
+            end
+        },
+        {
+            name = "狩猎鼹鼠任务",
+            description = function() 
+                local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
+                return "杀死" .. count .. "只鼹鼠" 
+            end,
+            check = function(player)
+                local required = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
+                return player.daily_kills and player.daily_kills.mole and player.daily_kills.mole >= required
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("mole"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                return count .. "个鼹鼠"
+            end
+        },
+        {
+            name = "狩猎皮弗娄牛任务",
+            description = function() 
+                local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
+                return "杀死" .. count .. "只皮弗娄牛" 
+            end,
+            check = function(player)
+                local required = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
+                return player.daily_kills and player.daily_kills.beefalo and player.daily_kills.beefalo >= required
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("meat"))
+                    end
+                    player.components.inventory:GiveItem(SpawnPrefab("beefalowool"))
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                return count .. "个肉和1个牛毛"
+            end
+        },
+        {
+            name = "狩猎爬行梦魇任务",
+            description = function() 
+                local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
+                return "杀死" .. count .. "个爬行梦魇" 
+            end,
+            check = function(player)
+                local required = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
+                return player.daily_kills and 
+                       ((player.daily_kills.crawlingnightmare and player.daily_kills.crawlingnightmare >= required) or
+                        (player.daily_kills.terrorbeak and player.daily_kills.terrorbeak >= required))
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                return count .. "个噩梦燃料"
+            end
+        },
+        {
+            name = "狩猎蜘蛛战士任务",
+            description = function() 
+                local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
+                return "杀死" .. count .. "只蜘蛛战士" 
+            end,
+            check = function(player)
+                local required = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
+                return player.daily_kills and player.daily_kills.spider_warrior and player.daily_kills.spider_warrior >= required
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("spidergland"))
+                    end
+                    player.components.inventory:GiveItem(SpawnPrefab("monstermeat"))
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                return count .. "个蜘蛛腺体和1个怪物肉"
+            end
+        },
+        {
+            name = "狩猎猎犬任务",
+            description = function() 
+                local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
+                return "杀死" .. count .. "只猎犬" 
+            end,
+            check = function(player)
+                local required = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
+                return player.daily_kills and player.daily_kills.hound and player.daily_kills.hound >= required
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("houndstooth"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                return count .. "个犬牙"
+            end
+        },
+        {
+            name = "狩猎蓝色猎犬任务",
+            description = function() 
+                local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
+                return "杀死" .. count .. "只蓝色猎犬" 
+            end,
+            check = function(player)
+                local required = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
+                return player.daily_kills and player.daily_kills.icehound and player.daily_kills.icehound >= required
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("bluegem"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                return count .. "颗蓝宝石"
+            end,
+            season_hint = "冬季出没"
+        },
+        {
+            name = "狩猎红色猎犬任务",
+            description = function() 
+                local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
+                return "杀死" .. count .. "只红色猎犬" 
+            end,
+            check = function(player)
+                local required = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
+                return player.daily_kills and player.daily_kills.firehound and player.daily_kills.firehound >= required
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("redgem"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                return count .. "颗红宝石"
+            end,
+            season_hint = "夏季出没"
         }
     }
     
@@ -1049,9 +1334,17 @@ function DailyTasks:SelectTasks()
                task.name ~= "烹饪海鲜食物任务" and
                task.name ~= "烹饪高级食物任务" then
                 
-                -- 如果是采冰任务，只在冬季添加到可用任务列表
-                if task.name == "采冰任务" then
+                -- 季节性任务检查
+                if task.name == "采冰任务" or 
+                   task.name == "狩猎海象任务" or 
+                   task.name == "狩猎蓝色猎犬任务" then
+                    -- 冬季限定任务
                     if current_season == "winter" then
+                        table.insert(available_tasks, i)
+                    end
+                elseif task.name == "狩猎红色猎犬任务" then
+                    -- 夏季限定任务
+                    if current_season == "summer" then
                         table.insert(available_tasks, i)
                     end
                 else
