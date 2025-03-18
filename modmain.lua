@@ -273,7 +273,7 @@ AddModRPCHandler("DailyTasks", "CheckTasks", function(player)
                 msg = msg .. GLOBAL.DAILYTASKS.Translate("奖励:") .. " " .. reward .. "\n"
                 msg = msg .. GLOBAL.DAILYTASKS.Translate("状态:") .. " " .. status .. "\n\n"
             end
-        else if tasks.current_task then
+        elseif tasks.current_task then
             local task_name = type(tasks.current_task.name) == "function" and tasks.current_task.name() or GLOBAL.DAILYTASKS.Translate(tasks.current_task.name)
             local desc = type(tasks.current_task.description) == "function" and tasks.current_task.description() or GLOBAL.DAILYTASKS.Translate(tasks.current_task.description)
             local reward = type(tasks.current_task.reward_description) == "function" and tasks.current_task.reward_description() or GLOBAL.DAILYTASKS.Translate(tasks.current_task.reward_description)
@@ -285,7 +285,6 @@ AddModRPCHandler("DailyTasks", "CheckTasks", function(player)
             msg = msg .. GLOBAL.DAILYTASKS.Translate("状态:") .. " " .. status
         else
             msg = msg .. GLOBAL.DAILYTASKS.Translate("暂无任务")
-        end
         end
         
         if player.components.talker then
@@ -484,8 +483,8 @@ GLOBAL.DAILYTASKS.TranslateTaskName = function(name)
         return name
     end
     
-    -- 使用已定义的翻译表
-    return GLOBAL.DAILYTASKS.TRANSLATIONS.en.TASK_NAMES[name] or name
+    -- 直接使用已定义的翻译表
+    return GLOBAL.DAILYTASKS.TRANSLATIONS[name] or name
 end
 
 -- 添加一个函数来翻译任务描述
@@ -494,7 +493,17 @@ GLOBAL.DAILYTASKS.TranslateTaskDescription = function(desc)
         return desc
     end
     
-    -- 尝试翻译常见的任务描述模式
+    -- 首先尝试使用已有的翻译表
+    for pattern, replacement in pairs(GLOBAL.DAILYTASKS.TRANSLATIONS) do
+        if string.find(pattern, "%%d%+") then
+            local number = string.match(desc, pattern)
+            if number then
+                return string.format(replacement, number)
+            end
+        end
+    end
+    
+    -- 如果没有匹配到，使用备用的模式匹配
     local count = desc:match("(%d+)")
     
     if desc:find("采集") and desc:find("浆果") then
@@ -519,7 +528,17 @@ GLOBAL.DAILYTASKS.TranslateRewardDescription = function(desc)
         return desc
     end
     
-    -- 尝试翻译常见的奖励描述模式
+    -- 首先尝试使用已有的翻译表
+    for pattern, replacement in pairs(GLOBAL.DAILYTASKS.TRANSLATIONS) do
+        if string.find(pattern, "%%d%+") and string.find(pattern, "个") then
+            local number = string.match(desc, pattern)
+            if number then
+                return string.format(replacement, number)
+            end
+        end
+    end
+    
+    -- 如果没有匹配到，使用备用的模式匹配
     local count = desc:match("(%d+)")
     
     if desc:find("肉") then
@@ -528,6 +547,10 @@ GLOBAL.DAILYTASKS.TranslateRewardDescription = function(desc)
         return count .. " papyrus"
     elseif desc:find("蝴蝶松饼") then
         return count .. " butterfly muffin"
+    elseif desc:find("小肉") then
+        return count .. " morsels"
+    elseif desc:find("蜘蛛腺体") then
+        return count .. " spider glands"
     -- 添加更多模式匹配...
     end
     
