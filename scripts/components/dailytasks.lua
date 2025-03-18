@@ -912,6 +912,12 @@ local DailyTasks = Class(function(self, inst)
                 return "采集" .. count .. "块冰" 
             end,
             check = function(player) 
+                -- 首先检查是否是冬季
+                if not (TheWorld.state.season == "winter") then
+                    -- 如果不是冬季，任务无法完成
+                    return false
+                end
+                
                 local required = math.ceil(6 * self.config.DIFFICULTY_MULTIPLIER)
                 if player.components.inventory then
                     local count = 0
@@ -939,7 +945,8 @@ local DailyTasks = Class(function(self, inst)
                     end
                 end
             end,
-            reward_description = "1个冰淇淋"
+            reward_description = "1个冰淇淋",
+            season_hint = "只能在冬季完成"  -- 添加季节提示
         },
         {
             name = "海钓任务",
@@ -1223,8 +1230,18 @@ function DailyTasks:NewDay()
     if self.config.TASK_COUNT > 1 then
         -- 多任务模式
         local available_tasks = {}
+        local current_season = TheWorld.state.season
+        
         for i, task in ipairs(self.tasks) do
-            table.insert(available_tasks, i)
+            -- 如果是采冰任务，只在冬季添加到可用任务列表
+            if task.name == "采冰任务" then
+                if current_season == "winter" then
+                    table.insert(available_tasks, i)
+                end
+            else
+                -- 其他任务正常添加
+                table.insert(available_tasks, i)
+            end
         end
         
         for i=1, math.min(self.config.TASK_COUNT, #self.tasks) do
@@ -1241,20 +1258,39 @@ function DailyTasks:NewDay()
                 if self.config.SHOW_NOTIFICATIONS and self.inst.components.talker then
                     local desc = type(task.description) == "function" and task.description() or task.description
                     local reward = type(task.reward_description) == "function" and task.reward_description() or task.reward_description
-                    self.inst.components.talker:Say("新的每日任务 #" .. i .. ": " .. task.name .. "\n" .. desc .. "\n奖励: " .. reward)
+                    local season_hint = task.season_hint and ("\n" .. task.season_hint) or ""
+                    self.inst.components.talker:Say("新的每日任务 #" .. i .. ": " .. task.name .. "\n" .. desc .. season_hint .. "\n奖励: " .. reward)
                 end
             end
         end
     else
         -- 单任务模式（兼容旧版）
-        local task_index = math.random(1, #self.tasks)
-        self.current_task = self.tasks[task_index]
+        local available_tasks = {}
+        local current_season = TheWorld.state.season
         
-        -- 通知玩家新任务
-        if self.config.SHOW_NOTIFICATIONS and self.inst.components.talker then
-            local desc = type(self.current_task.description) == "function" and self.current_task.description() or self.current_task.description
-            local reward = type(self.current_task.reward_description) == "function" and self.current_task.reward_description() or self.current_task.reward_description
-            self.inst.components.talker:Say("新的每日任务: " .. self.current_task.name .. "\n" .. desc .. "\n奖励: " .. reward)
+        for i, task in ipairs(self.tasks) do
+            -- 如果是采冰任务，只在冬季添加到可用任务列表
+            if task.name == "采冰任务" then
+                if current_season == "winter" then
+                    table.insert(available_tasks, i)
+                end
+            else
+                -- 其他任务正常添加
+                table.insert(available_tasks, i)
+            end
+        end
+        
+        if #available_tasks > 0 then
+            local task_index = available_tasks[math.random(1, #available_tasks)]
+            self.current_task = self.tasks[task_index]
+            
+            -- 通知玩家新任务
+            if self.config.SHOW_NOTIFICATIONS and self.inst.components.talker then
+                local desc = type(self.current_task.description) == "function" and self.current_task.description() or self.current_task.description
+                local reward = type(self.current_task.reward_description) == "function" and self.current_task.reward_description() or self.current_task.reward_description
+                local season_hint = self.current_task.season_hint and ("\n" .. self.current_task.season_hint) or ""
+                self.inst.components.talker:Say("新的每日任务: " .. self.current_task.name .. "\n" .. desc .. season_hint .. "\n奖励: " .. reward)
+            end
         end
     end
 end
