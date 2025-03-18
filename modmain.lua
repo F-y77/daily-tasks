@@ -83,17 +83,13 @@ local function OnPlayerSpawn(inst)
         inst:AddComponent("dailytasks")
     end
     
-    -- 初始化统计数据
+    -- 初始化统计数据（移除所有烹饪相关的初始化）
     inst.daily_kills = {}
-    inst.daily_trees_chopped = 0
     inst.daily_rocks_mined = 0
     inst.daily_fish_caught = 0
-    inst.daily_foods_cooked = 0
     inst.daily_gold_mined = 0
     inst.daily_marble_mined = 0
     inst.daily_big_fish_caught = 0
-    inst.daily_gourmet_foods_cooked = 0
-    inst.daily_meat_foods_cooked = 0
     inst.daily_items_collected = {}
     inst.daily_items_planted = 0
     inst.daily_distance_walked = 0
@@ -103,16 +99,7 @@ local function OnPlayerSpawn(inst)
     inst.daily_health_restored = 0
     inst.daily_sanity_restored = 0
     inst.daily_hunger_restored = 0
-    inst.daily_evergreen_chopped = 0
-    inst.daily_birchnut_chopped = 0
-    inst.daily_moon_tree_chopped = 0
-    inst.daily_red_mushtree_chopped = 0
-    inst.daily_blue_mushtree_chopped = 0
-    inst.daily_green_mushtree_chopped = 0
     inst.daily_ocean_fish_caught = 0
-    inst.daily_special_fish_caught = 0
-    inst.daily_veggie_foods_cooked = 0
-    inst.daily_seafood_foods_cooked = 0
     inst.daily_treasures_dug = 0
     inst.daily_areas_discovered = 0
     inst.daily_tools_crafted = 0
@@ -120,322 +107,55 @@ local function OnPlayerSpawn(inst)
     -- 监听杀死生物事件
     inst:ListenForEvent("killed", OnKilled)
     
-    -- 监听烹饪事件
-    inst:ListenForEvent("donecooking", function(inst, data)
-        inst.daily_foods_cooked = (inst.daily_foods_cooked or 0) + 1
-        print("已烹饪食物: " .. inst.daily_foods_cooked)
-        
-        -- 检查是否是高级食物
-        if data and data.product and (
-           data.product.prefab == "honeynuggets" or 
-           data.product.prefab == "honeyham" or 
-           data.product.prefab == "dragonpie" or 
-           data.product.prefab == "baconeggs" or 
-           data.product.prefab == "butterflymuffin" or 
-           data.product.prefab == "fruitmedley" or 
-           data.product.prefab == "fishtacos" or 
-           data.product.prefab == "waffles") then
-            inst.daily_gourmet_foods_cooked = (inst.daily_gourmet_foods_cooked or 0) + 1
-            print("已烹饪高级食物: " .. inst.daily_gourmet_foods_cooked)
-        end
-        
-        -- 检查是否含肉食物
-        if data and data.product and (
-           data.product.prefab == "meatballs" or 
-           data.product.prefab == "honeynuggets" or 
-           data.product.prefab == "honeyham" or 
-           data.product.prefab == "baconeggs" or 
-           data.product.prefab == "fishtacos" or 
-           data.product.prefab == "fishsticks" or 
-           data.product.prefab == "monsterlasagna") then
-            inst.daily_meat_foods_cooked = (inst.daily_meat_foods_cooked or 0) + 1
-            print("已烹饪肉类食物: " .. inst.daily_meat_foods_cooked)
-        end
-    end)
-    
-    -- 添加额外的烹饪事件监听
-    inst:ListenForEvent("stewer_cook", function(inst, data)
-        inst.daily_foods_cooked = (inst.daily_foods_cooked or 0) + 1
-        print("已烹饪食物(炖锅): " .. inst.daily_foods_cooked)
-    end)
-    
-    -- 监听烹饪锅完成事件
-    inst:ListenForEvent("harvestable", function(inst, data)
-        if data and data.target and data.target.prefab == "cookpot" then
-            inst.daily_foods_cooked = (inst.daily_foods_cooked or 0) + 1
-            print("烹饪锅完成: " .. inst.daily_foods_cooked)
-        end
-    end)
-    
     -- 监听采矿事件
-    inst:ListenForEvent("finishedwork", function(inst, data)
-        if data and data.target and data.target.prefab then
-            print("完成工作: " .. data.target.prefab) -- 添加调试信息
+    inst:ListenForEvent("working", function(inst, data)
+        if data and data.target and data.target:HasTag("boulder") then
+            inst.daily_rocks_mined = (inst.daily_rocks_mined or 0) + 1
+            print("已采矿: " .. inst.daily_rocks_mined)
             
-            -- 金矿实际上是rock2
-            if data.target.prefab == "rock2" then
+            -- 检查是否是金矿
+            if data.target.prefab == "rock1" or data.target.prefab == "rock2" then
                 inst.daily_gold_mined = (inst.daily_gold_mined or 0) + 1
                 print("已采金: " .. inst.daily_gold_mined)
-            
-            -- 普通石头
-            elseif data.target.prefab == "rock1" or 
-                   data.target.prefab == "rocks" or
-                   data.target.prefab == "rock_flintless" then
-                inst.daily_rocks_mined = (inst.daily_rocks_mined or 0) + 1
-                print("已采矿: " .. inst.daily_rocks_mined)
-            
-            -- 大理石和冰
-            elseif data.target.prefab == "rock_ice" or
-                   data.target.prefab == "marbletree" or
-                   data.target.prefab == "marblepillar" or
-                   data.target.prefab == "marble" then
-                inst.daily_marble_mined = (inst.daily_marble_mined or 0) + 1
-                print("已采大理石/冰: " .. inst.daily_marble_mined)
             end
-        end
-    end)
-    
-    -- 再添加一个更全面的工作完成事件处理器
-    inst:ListenForEvent("working", function(inst, data)
-        if data and data.target then
-            if data.target:HasTag("boulder") then
-                local target_prefab = data.target.prefab
-                print("正在挖掘: " .. target_prefab)
-                
-                -- 处理不同类型的石头
-                if string.find(target_prefab, "gold") then
-                    -- 这是金矿
-                    if data.action == GLOBAL.ACTIONS.MINE then
-                        inst.daily_gold_mined = (inst.daily_gold_mined or 0) + 0.25 -- 通常需要4次才能完成
-                        print("采金进度: " .. inst.daily_gold_mined)
-                    end
-                end
+            
+            -- 检查是否是大理石
+            if data.target.prefab == "rock_ice" or data.target.prefab == "rock_moon" then
+                inst.daily_marble_mined = (inst.daily_marble_mined or 0) + 1
+                print("已采集大理石: " .. inst.daily_marble_mined)
             end
         end
     end)
     
     -- 监听钓鱼事件
     inst:ListenForEvent("fishingcollect", function(inst, data)
-        inst.daily_fish_caught = (inst.daily_fish_caught or 0) + 1
-        print("已钓鱼: " .. inst.daily_fish_caught)
-        
-        -- 检查是否是大鱼
-        if data and data.fish and (
-           data.fish.prefab == "oceanfish_medium_1" or 
-           data.fish.prefab == "oceanfish_medium_2" or 
-           data.fish.prefab == "oceanfish_medium_3" or 
-           data.fish.prefab == "oceanfish_medium_4" or 
-           data.fish.prefab == "oceanfish_medium_5" or 
-           data.fish.prefab == "oceanfish_large_1" or 
-           data.fish.prefab == "oceanfish_large_2" or 
-           data.fish.prefab == "oceanfish_large_3" or 
-           data.fish.prefab == "oceanfish_large_4" or 
-           data.fish.prefab == "oceanfish_large_5") then
-            inst.daily_big_fish_caught = (inst.daily_big_fish_caught or 0) + 1
-            print("已钓大鱼: " .. inst.daily_big_fish_caught)
-        end
-    end)
-    
-    -- 监听种植事件
-    inst:ListenForEvent("deployitem", function(inst, data)
-        if data and data.prefab then
-            inst.daily_items_planted = (inst.daily_items_planted or 0) + 1
-            print("已种植: " .. inst.daily_items_planted)
-        end
-    end)
-    
-    -- 监听建造事件
-    inst:ListenForEvent("buildstructure", function(inst, data)
-        if data and data.item then
-            if not inst.daily_structures_built then
-                inst.daily_structures_built = {}
-            end
+        if data and data.fish then
+            inst.daily_fish_caught = (inst.daily_fish_caught or 0) + 1
+            print("已钓鱼: " .. inst.daily_fish_caught)
             
-            local structure_type = data.item.prefab
-            if not inst.daily_structures_built[structure_type] then
-                inst.daily_structures_built[structure_type] = 0
-            end
-            
-            inst.daily_structures_built[structure_type] = inst.daily_structures_built[structure_type] + 1
-            print("已建造 " .. structure_type .. ": " .. inst.daily_structures_built[structure_type])
-        end
-    end)
-    
-    -- 监听制作物品事件
-    inst:ListenForEvent("builditem", function(inst, data)
-        if data and data.item and data.item.prefab then
-            local item_prefab = data.item.prefab
-            print("制作物品: " .. item_prefab)
-            
-            -- 初始化物品制作统计
-            if not inst.daily_items_crafted then
-                inst.daily_items_crafted = {}
-            end
-            
-            if not inst.daily_items_crafted[item_prefab] then
-                inst.daily_items_crafted[item_prefab] = 0
-            end
-            
-            inst.daily_items_crafted[item_prefab] = inst.daily_items_crafted[item_prefab] + 1
-            
-            -- 检查是否是工具
-            local tools = {
-                "axe", "pickaxe", "shovel", "hammer", "pitchfork", "fishingrod", 
-                "goldenaxe", "goldenpickaxe", "goldenshovel", "spear", "tentaclespike",
-                "hambat", "boomerang", "bugnet", "compass", "houndstooth", "torch",
-                "trap", "birdtrap", "wateringcan", "premiumwateringcan"
-            }
-            
-            local is_tool = false
-            for _, tool in ipairs(tools) do
-                if item_prefab == tool then
-                    is_tool = true
-                    break
-                end
-            end
-            
-            if is_tool then
-                print("制作工具: " .. item_prefab)
-                -- 将该次制作记为工具制作
-                inst.daily_tools_crafted = (inst.daily_tools_crafted or 0) + 1
-                print("已制作工具数量: " .. inst.daily_tools_crafted)
+            -- 检查是否是大鱼
+            if data.fish.components and data.fish.components.perishable and 
+               data.fish.components.perishable.perishtime and 
+               data.fish.components.perishable.perishtime >= TUNING.PERISH_MED then
+                inst.daily_big_fish_caught = (inst.daily_big_fish_caught or 0) + 1
+                print("已钓大鱼: " .. inst.daily_big_fish_caught)
             end
         end
     end)
     
-    -- 监听恢复生命值事件
-    inst:ListenForEvent("healthdelta", function(inst, data)
-        if data and data.amount and data.amount > 0 then
-            inst.daily_health_restored = (inst.daily_health_restored or 0) + data.amount
-            print("已恢复生命值: " .. inst.daily_health_restored)
-        end
-    end)
-    
-    -- 监听恢复理智值事件
-    inst:ListenForEvent("sanitydelta", function(inst, data)
-        if data and data.amount and data.amount > 0 then
-            inst.daily_sanity_restored = (inst.daily_sanity_restored or 0) + data.amount
-            print("已恢复理智值: " .. inst.daily_sanity_restored)
-        end
-    end)
-    
-    -- 监听恢复饥饿值事件
-    inst:ListenForEvent("hungerdelta", function(inst, data)
-        if data and data.amount and data.amount > 0 then
-            inst.daily_hunger_restored = (inst.daily_hunger_restored or 0) + data.amount
-            print("已恢复饥饿值: " .. inst.daily_hunger_restored)
-        end
-    end)
-    
-    -- 监听收集物品事件
+    -- 监听采集事件
     inst:ListenForEvent("picksomething", function(inst, data)
         if data and data.object and data.object.prefab then
             if not inst.daily_items_collected then
                 inst.daily_items_collected = {}
             end
             
-            local item_type = data.object.prefab
-            if not inst.daily_items_collected[item_type] then
-                inst.daily_items_collected[item_type] = 0
+            if not inst.daily_items_collected[data.object.prefab] then
+                inst.daily_items_collected[data.object.prefab] = 0
             end
             
-            inst.daily_items_collected[item_type] = inst.daily_items_collected[item_type] + 1
-            print("已收集 " .. item_type .. ": " .. inst.daily_items_collected[item_type])
-        end
-    end)
-
-    -- 监听砍桦树事件
-    inst:ListenForEvent("performaction", function(inst, data)
-        if data and data.action and data.action.id == "CHOP" and 
-           data.target and data.target.prefab == "deciduoustree" then
-            inst.daily_birchnut_chopped = (inst.daily_birchnut_chopped or 0) + 1
-            print("已砍桦树: " .. inst.daily_birchnut_chopped)
-        end
-    end)
-
-    -- 监听砍大树事件
-    local function OnTreeChop(inst, chopper)
-        if chopper and chopper:HasTag("player") then
-            if inst.size and inst.size == "tall" then
-                chopper.daily_trees_chopped = (chopper.daily_trees_chopped or 0) + 1
-                print("已砍大树: " .. chopper.daily_trees_chopped)
-            end
-        end
-    end
-
-    -- 为海钓添加监听
-    inst:ListenForEvent("fishingcollect", function(inst, data)
-        if data and data.fish then
-            if data.fish.prefab and string.find(data.fish.prefab, "oceanfish") then
-                inst.daily_ocean_fish_caught = (inst.daily_ocean_fish_caught or 0) + 1
-                print("已海钓: " .. inst.daily_ocean_fish_caught)
-            end
-            
-            -- 特殊鱼
-            if data.fish.prefab and (
-               data.fish.prefab == "oceanfish_medium_8" or -- 彩虹鳟鱼
-               data.fish.prefab == "oceanfish_medium_3") then -- 花纹鳄鱼
-                inst.daily_special_fish_caught = (inst.daily_special_fish_caught or 0) + 1
-                print("已钓特殊鱼: " .. inst.daily_special_fish_caught)
-            end
-        end
-    end)
-
-    -- 监听烹饪素食料理
-    inst:ListenForEvent("donecooking", function(inst, data)
-        if data and data.product then
-            if data.product.prefab == "ratatouille" or 
-               data.product.prefab == "fruitmedley" or
-               data.product.prefab == "jammypreserves" or
-               data.product.prefab == "dragonpie" or
-               data.product.prefab == "trailmix" or
-               data.product.prefab == "butterflymuffin" or
-               data.product.prefab == "vegstinger" then
-                inst.daily_veggie_foods_cooked = (inst.daily_veggie_foods_cooked or 0) + 1
-                print("已烹饪素食料理: " .. inst.daily_veggie_foods_cooked)
-            end
-            
-            if data.product.prefab == "fishsticks" or
-               data.product.prefab == "fishtacos" or
-               data.product.prefab == "californiaroll" or
-               data.product.prefab == "seafoodgumbo" or
-               data.product.prefab == "surfnturf" then
-                inst.daily_seafood_foods_cooked = (inst.daily_seafood_foods_cooked or 0) + 1
-                print("已烹饪海鲜料理: " .. inst.daily_seafood_foods_cooked)
-            end
-        end
-    end)
-
-    -- 监听挖宝事件
-    inst:ListenForEvent("performaction", function(inst, data)
-        if data and data.action and data.action.id == "DIG" then
-            if data.target and (
-               data.target.prefab == "buriedtreasure" or
-               (data.target.components and data.target.components.workable and 
-                data.target.components.workable.action == GLOBAL.ACTIONS.DIG and
-                math.random() < 0.2)) then -- 有20%几率算作宝藏
-                inst.daily_treasures_dug = (inst.daily_treasures_dug or 0) + 1
-                print("已挖掘宝藏: " .. inst.daily_treasures_dug)
-            end
-        end
-    end)
-
-    -- 监听探索新区域，使用正确的Vector3引用
-    inst:DoPeriodicTask(3, function()
-        -- 使用玩家位置变化来代替地图API
-        if not inst.last_position then
-            inst.last_position = GLOBAL.Vector3(inst.Transform:GetWorldPosition())
-            inst.daily_areas_discovered = 0
-        else
-            local current_pos = GLOBAL.Vector3(inst.Transform:GetWorldPosition())
-            local dist = inst.last_position:DistSq(current_pos)
-            
-            -- 如果距离超过一定值，认为探索了新区域
-            if dist > 2500 then -- 50单位的距离的平方
-                inst.daily_areas_discovered = (inst.daily_areas_discovered or 0) + 1
-                print("已探索新区域: " .. inst.daily_areas_discovered)
-                inst.last_position = current_pos
-            end
+            inst.daily_items_collected[data.object.prefab] = inst.daily_items_collected[data.object.prefab] + 1
+            print("已采集 " .. data.object.prefab .. ": " .. inst.daily_items_collected[data.object.prefab])
         end
     end)
 end
@@ -488,10 +208,6 @@ AddModRPCHandler("DailyTasks", "CheckProgress", function(player)
     if player then
         local msg = "当前任务进度:\n"
         
-        if player.daily_trees_chopped then
-            msg = msg .. "已砍树: " .. player.daily_trees_chopped .. "\n"
-        end
-        
         if player.daily_rocks_mined then
             msg = msg .. "已采矿: " .. player.daily_rocks_mined .. "\n"
         end
@@ -510,14 +226,6 @@ AddModRPCHandler("DailyTasks", "CheckProgress", function(player)
         
         if player.daily_big_fish_caught then
             msg = msg .. "已钓大鱼: " .. player.daily_big_fish_caught .. "\n"
-        end
-        
-        if player.daily_foods_cooked then
-            msg = msg .. "已烹饪食物: " .. player.daily_foods_cooked .. "\n"
-        end
-        
-        if player.daily_meat_foods_cooked then
-            msg = msg .. "已烹饪肉类食物: " .. player.daily_meat_foods_cooked .. "\n"
         end
         
         if player.daily_kills then
@@ -546,46 +254,6 @@ AddModRPCHandler("DailyTasks", "CheckProgress", function(player)
             for k, v in pairs(player.daily_items_crafted) do
                 msg = msg .. "  " .. k .. ": " .. v .. "\n"
             end
-        end
-        
-        if player.daily_evergreen_chopped then
-            msg = msg .. "已砍常青树: " .. player.daily_evergreen_chopped .. "\n"
-        end
-        
-        if player.daily_birchnut_chopped then
-            msg = msg .. "已砍桦树: " .. player.daily_birchnut_chopped .. "\n"
-        end
-        
-        if player.daily_moon_tree_chopped then
-            msg = msg .. "已砍月树: " .. player.daily_moon_tree_chopped .. "\n"
-        end
-        
-        if player.daily_red_mushtree_chopped then
-            msg = msg .. "已砍红蘑菇树: " .. player.daily_red_mushtree_chopped .. "\n"
-        end
-        
-        if player.daily_blue_mushtree_chopped then
-            msg = msg .. "已砍蓝蘑菇树: " .. player.daily_blue_mushtree_chopped .. "\n"
-        end
-        
-        if player.daily_green_mushtree_chopped then
-            msg = msg .. "已砍绿蘑菇树: " .. player.daily_green_mushtree_chopped .. "\n"
-        end
-        
-        if player.daily_ocean_fish_caught then
-            msg = msg .. "已海钓: " .. player.daily_ocean_fish_caught .. "\n"
-        end
-        
-        if player.daily_special_fish_caught then
-            msg = msg .. "已钓特殊鱼: " .. player.daily_special_fish_caught .. "\n"
-        end
-        
-        if player.daily_veggie_foods_cooked then
-            msg = msg .. "已烹饪素食料理: " .. player.daily_veggie_foods_cooked .. "\n"
-        end
-        
-        if player.daily_seafood_foods_cooked then
-            msg = msg .. "已烹饪海鲜料理: " .. player.daily_seafood_foods_cooked .. "\n"
         end
         
         if player.daily_treasures_dug then
@@ -631,33 +299,20 @@ local function SetupKeyHandlers(inst)
                 print("每日任务调试信息")
                 print("========================")
                 
-                -- 打印所有统计数据
+                -- 打印所有统计数据（移除烹饪相关的统计）
                 local stats = {
-                    "daily_trees_chopped",
                     "daily_rocks_mined",
                     "daily_gold_mined",
                     "daily_marble_mined",
                     "daily_fish_caught",
                     "daily_big_fish_caught",
-                    "daily_foods_cooked",
-                    "daily_gourmet_foods_cooked",
-                    "daily_meat_foods_cooked",
                     "daily_kills",
                     "daily_items_collected",
                     "daily_items_planted",
                     "daily_structures_built",
                     "daily_items_crafted",
                     "daily_bosses_killed",
-                    "daily_evergreen_chopped",
-                    "daily_birchnut_chopped",
-                    "daily_moon_tree_chopped",
-                    "daily_red_mushtree_chopped",
-                    "daily_blue_mushtree_chopped",
-                    "daily_green_mushtree_chopped",
                     "daily_ocean_fish_caught",
-                    "daily_special_fish_caught",
-                    "daily_veggie_foods_cooked",
-                    "daily_seafood_foods_cooked",
                     "daily_treasures_dug",
                     "daily_areas_discovered"
                 }
@@ -710,7 +365,7 @@ end
 
 AddPlayerPostInit(SetupKeyHandlers)
 
--- 导出全局函数，可以在其他地方使用
+-- 修改全局任务列表函数，移除所有烹饪相关任务
 GLOBAL.DAILYTASKS.GetTaskList = function()
     return {
         "采集浆果任务",
@@ -726,10 +381,6 @@ GLOBAL.DAILYTASKS.GetTaskList = function()
         "采集大理石任务",
         "钓鱼任务",
         "钓大鱼任务",
-        "烹饪任务",
-        "烹饪素食任务",
-        "烹饪肉类食物任务",
-        "烹饪海鲜食物任务",
         "生存任务",
         "保持健康任务",
         "保持理智任务",

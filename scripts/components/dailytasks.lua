@@ -9,12 +9,10 @@ local DailyTasks = Class(function(self, inst)
     -- 获取配置
     self.config = DAILYTASKS.CONFIG
     
-    -- 初始化玩家的每日统计
+    -- 初始化玩家的每日统计（移除烹饪相关的初始化）
     self.inst.daily_kills = {}
-    self.inst.daily_trees_chopped = 0
     self.inst.daily_rocks_mined = 0
     self.inst.daily_fish_caught = 0
-    self.inst.daily_foods_cooked = 0
     self.inst.daily_items_collected = {}
     self.inst.daily_items_planted = 0
     self.inst.daily_distance_walked = 0
@@ -388,75 +386,48 @@ local DailyTasks = Class(function(self, inst)
         },
         {
             name = "钓大鱼任务",
-            description = "钓上一条大鱼",
+            description = function() 
+                local count = math.ceil(1 * self.config.DIFFICULTY_MULTIPLIER)
+                return "钓" .. count .. "条大鱼" 
+            end,
             check = function(player)
-                return player.daily_big_fish_caught and player.daily_big_fish_caught >= 1
+                local required = math.ceil(1 * self.config.DIFFICULTY_MULTIPLIER)
+                return player.daily_big_fish_caught and player.daily_big_fish_caught >= required
             end,
             reward = function(player)
                 if player.components.inventory then
-                    player.components.inventory:GiveItem(SpawnPrefab("fishmeat_cooked"))
-                    player.components.inventory:GiveItem(SpawnPrefab("fishmeat_cooked"))
-                    player.components.inventory:GiveItem(SpawnPrefab("fishmeat_cooked"))
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("fish_cooked"))
+                    end
                 end
             end,
             reward_description = "3个熟鱼肉"
         },
         
-        -- 烹饪任务
-        {
-            name = "烹饪任务",
-            description = function() 
-                local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
-                return "烹饪" .. count .. "个食物" 
-            end,
-            check = function(player)
-                local required = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
-                return player.daily_foods_cooked and player.daily_foods_cooked >= required
-            end,
-            reward = function(player)
-                if player.components.inventory then
-                    local food = SpawnPrefab("meatballs")
-                    if food then
-                        player.components.inventory:GiveItem(food)
-                    end
-                end
-            end,
-            reward_description = "1个肉丸"
-        },
-        {
-            name = "烹饪肉类食物任务",
-            description = function() 
-                local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
-                return "烹饪" .. count .. "个含肉食物" 
-            end,
-            check = function(player)
-                local required = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
-                return player.daily_meat_foods_cooked and player.daily_meat_foods_cooked >= required
-            end,
-            reward = function(player)
-                if player.components.inventory then
-                    local food = SpawnPrefab("meatballs")
-                    if food then
-                        player.components.inventory:GiveItem(food)
-                    end
-                end
-            end,
-            reward_description = "1个肉丸"
-        },
-        
         -- 生存任务
         {
             name = "生存任务",
-            description = "存活一整天",
+            description = function() 
+                local days = math.ceil(1 * self.config.DIFFICULTY_MULTIPLIER)
+                return "存活" .. days .. "天" 
+            end,
             check = function(player)
-                return true -- 这个任务会在新的一天自动完成
+                -- 这个任务总是完成的，因为它是在新的一天检查的
+                return true
             end,
             reward = function(player)
                 if player.components.inventory then
-                    player.components.inventory:GiveItem(SpawnPrefab("healingsalve"))
+                    local count = math.ceil(1 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    end
                 end
             end,
-            reward_description = "1个治疗药膏"
+            reward_description = function()
+                local count = math.ceil(1 * self.config.REWARD_MULTIPLIER)
+                return count .. "个金块"
+            end
         },
         {
             name = "保持健康任务",
@@ -851,50 +822,6 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "1个海鲜牛排"
         },
         {
-            name = "烹饪素食任务",
-            description = function() 
-                local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
-                return "烹饪" .. count .. "道素食料理" 
-            end,
-            check = function(player)
-                local required = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
-                return player.daily_veggie_foods_cooked and player.daily_veggie_foods_cooked >= required
-            end,
-            reward = function(player)
-                if player.components.inventory then
-                    -- 使用高级食物任务的奖励
-                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
-                    for i=1, count do
-                        player.components.inventory:GiveItem(SpawnPrefab("butter"))
-                    end
-                end
-            end,
-            reward_description = function()
-                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
-                return count .. "块黄油"
-            end
-        },
-        {
-            name = "烹饪海鲜任务",
-            description = function() 
-                local count = math.ceil(1 * self.config.DIFFICULTY_MULTIPLIER)
-                return "烹饪" .. count .. "个海鲜料理" 
-            end,
-            check = function(player)
-                local required = math.ceil(1 * self.config.DIFFICULTY_MULTIPLIER)
-                return player.daily_seafood_foods_cooked and player.daily_seafood_foods_cooked >= required
-            end,
-            reward = function(player)
-                if player.components.inventory then
-                    local food = SpawnPrefab("fishsticks")
-                    if food then
-                        player.components.inventory:GiveItem(food)
-                    end
-                end
-            end,
-            reward_description = "1个鱼排"
-        },
-        {
             name = "寻找宝藏任务",
             description = "挖掘一处宝藏",
             check = function(player)
@@ -1026,25 +953,6 @@ function DailyTasks:Init()
             self.inst.daily_kills[victim_type] = (self.inst.daily_kills[victim_type] or 0) + 1
         end
     end)
-    
-    self.inst:ListenForEvent("donecooking", function(inst, data)
-        print("完成烹饪!")
-        if not inst.daily_foods_cooked then
-            inst.daily_foods_cooked = 0
-        end
-        inst.daily_foods_cooked = inst.daily_foods_cooked + 1
-        print("已烹饪食物数量: " .. inst.daily_foods_cooked)
-    end)
-
-    -- 添加额外的烹饪事件监听
-    self.inst:ListenForEvent("stewer_cook", function(inst, data)
-        print("使用烹饪锅烹饪!")
-        if not inst.daily_foods_cooked then
-            inst.daily_foods_cooked = 0
-        end
-        inst.daily_foods_cooked = inst.daily_foods_cooked + 1
-        print("已烹饪食物数量: " .. inst.daily_foods_cooked)
-    end)
 end
 
 function DailyTasks:OnUpdate()
@@ -1082,87 +990,20 @@ function DailyTasks:NewDay()
     -- 重置玩家的每日统计
     self.inst.daily_kills = {}
     
-    -- 初始化所有树木相关计数器
-    self.inst.daily_trees_chopped = 0
-    self.inst.daily_evergreen_chopped = 0
-    self.inst.daily_birchnut_chopped = 0
-    self.inst.daily_moon_tree_chopped = 0
-    self.inst.daily_red_mushtree_chopped = 0
-    self.inst.daily_blue_mushtree_chopped = 0
-    self.inst.daily_green_mushtree_chopped = 0
-    
     -- 其他统计数据重置...
     self.inst.daily_rocks_mined = 0
     self.inst.daily_fish_caught = 0
-    -- ...
+    self.inst.daily_items_planted = 0
+    self.inst.daily_distance_walked = 0
+    self.inst.daily_structures_built = {}
+    self.inst.daily_items_crafted = {}
+    self.inst.daily_bosses_killed = {}
+    self.inst.daily_health_restored = 0
+    self.inst.daily_sanity_restored = 0
+    self.inst.daily_hunger_restored = 0
     
     -- 选择新任务
-    if self.config.TASK_COUNT > 1 then
-        -- 多任务模式
-        local available_tasks = {}
-        local current_season = TheWorld.state.season
-        
-        for i, task in ipairs(self.tasks) do
-            -- 如果是采冰任务，只在冬季添加到可用任务列表
-            if task.name == "采冰任务" then
-                if current_season == "winter" then
-                    table.insert(available_tasks, i)
-                end
-            else
-                -- 其他任务正常添加
-                table.insert(available_tasks, i)
-            end
-        end
-        
-        for i=1, math.min(self.config.TASK_COUNT, #self.tasks) do
-            if #available_tasks > 0 then
-                local index = math.random(1, #available_tasks)
-                local task_index = available_tasks[index]
-                table.remove(available_tasks, index)
-                
-                local task = self.tasks[task_index]
-                table.insert(self.current_tasks, task)
-                self.tasks_completed[i] = false
-                
-                -- 通知玩家新任务
-                if self.config.SHOW_NOTIFICATIONS and self.inst.components.talker then
-                    local desc = type(task.description) == "function" and task.description() or task.description
-                    local reward = type(task.reward_description) == "function" and task.reward_description() or task.reward_description
-                    local season_hint = task.season_hint and ("\n" .. task.season_hint) or ""
-                    self.inst.components.talker:Say("新的每日任务 #" .. i .. ": " .. task.name .. "\n" .. desc .. season_hint .. "\n奖励: " .. reward)
-                end
-            end
-        end
-    else
-        -- 单任务模式（兼容旧版）
-        local available_tasks = {}
-        local current_season = TheWorld.state.season
-        
-        for i, task in ipairs(self.tasks) do
-            -- 如果是采冰任务，只在冬季添加到可用任务列表
-            if task.name == "采冰任务" then
-                if current_season == "winter" then
-                    table.insert(available_tasks, i)
-                end
-            else
-                -- 其他任务正常添加
-                table.insert(available_tasks, i)
-            end
-        end
-        
-        if #available_tasks > 0 then
-            local task_index = available_tasks[math.random(1, #available_tasks)]
-            self.current_task = self.tasks[task_index]
-            
-            -- 通知玩家新任务
-            if self.config.SHOW_NOTIFICATIONS and self.inst.components.talker then
-                local desc = type(self.current_task.description) == "function" and self.current_task.description() or self.current_task.description
-                local reward = type(self.current_task.reward_description) == "function" and self.current_task.reward_description() or self.current_task.reward_description
-                local season_hint = self.current_task.season_hint and ("\n" .. self.current_task.season_hint) or ""
-                self.inst.components.talker:Say("新的每日任务: " .. self.current_task.name .. "\n" .. desc .. season_hint .. "\n奖励: " .. reward)
-            end
-        end
-    end
+    self:SelectTasks()
 end
 
 function DailyTasks:CompleteTask(task_index)
@@ -1190,6 +1031,91 @@ function DailyTasks:CompleteTask(task_index)
         if self.config.SHOW_NOTIFICATIONS and self.inst.components.talker then
             local reward = type(self.current_task.reward_description) == "function" and self.current_task.reward_description() or self.current_task.reward_description
             self.inst.components.talker:Say("任务完成！获得奖励: " .. reward)
+        end
+    end
+end
+
+function DailyTasks:SelectTasks()
+    if self.config.TASK_COUNT > 1 then
+        -- 多任务模式
+        local available_tasks = {}
+        local current_season = TheWorld.state.season
+        
+        for i, task in ipairs(self.tasks) do
+            -- 跳过所有烹饪相关任务
+            if task.name ~= "烹饪任务" and 
+               task.name ~= "烹饪素食任务" and 
+               task.name ~= "烹饪肉类食物任务" and 
+               task.name ~= "烹饪海鲜食物任务" and
+               task.name ~= "烹饪高级食物任务" then
+                
+                -- 如果是采冰任务，只在冬季添加到可用任务列表
+                if task.name == "采冰任务" then
+                    if current_season == "winter" then
+                        table.insert(available_tasks, i)
+                    end
+                else
+                    -- 其他任务正常添加
+                    table.insert(available_tasks, i)
+                end
+            end
+        end
+        
+        for i=1, math.min(self.config.TASK_COUNT, #available_tasks) do
+            if #available_tasks > 0 then
+                local index = math.random(1, #available_tasks)
+                local task_index = available_tasks[index]
+                table.remove(available_tasks, index)
+                
+                local task = self.tasks[task_index]
+                table.insert(self.current_tasks, task)
+                self.tasks_completed[i] = false
+                
+                -- 通知玩家新任务
+                if self.config.SHOW_NOTIFICATIONS and self.inst.components.talker then
+                    local desc = type(task.description) == "function" and task.description() or task.description
+                    local reward = type(task.reward_description) == "function" and task.reward_description() or task.reward_description
+                    local season_hint = task.season_hint and ("\n" .. task.season_hint) or ""
+                    self.inst.components.talker:Say("新的每日任务 #" .. i .. ": " .. task.name .. "\n" .. desc .. season_hint .. "\n奖励: " .. reward)
+                end
+            end
+        end
+    else
+        -- 单任务模式（兼容旧版）
+        local available_tasks = {}
+        local current_season = TheWorld.state.season
+        
+        for i, task in ipairs(self.tasks) do
+            -- 跳过所有烹饪相关任务
+            if task.name ~= "烹饪任务" and 
+               task.name ~= "烹饪素食任务" and 
+               task.name ~= "烹饪肉类食物任务" and 
+               task.name ~= "烹饪海鲜食物任务" and
+               task.name ~= "烹饪高级食物任务" then
+                
+                -- 如果是采冰任务，只在冬季添加到可用任务列表
+                if task.name == "采冰任务" then
+                    if current_season == "winter" then
+                        table.insert(available_tasks, i)
+                    end
+                else
+                    -- 其他任务正常添加
+                    table.insert(available_tasks, i)
+                end
+            end
+        end
+        
+        if #available_tasks > 0 then
+            local task_index = available_tasks[math.random(1, #available_tasks)]
+            self.current_task = self.tasks[task_index]
+            
+            -- 通知玩家新任务
+            if self.config.SHOW_NOTIFICATIONS and self.inst.components.talker then
+                local desc = type(self.current_task.description) == "function" and self.current_task.description() or self.current_task.description
+                local reward = type(self.current_task.reward_description) == "function" and self.current_task.reward_description() or self.current_task.reward_description
+                local season_hint = self.current_task.season_hint and ("\n" .. self.current_task.season_hint) or ""
+                self.inst.components.talker:Say("新的每日任务: " .. self.current_task.name .. "\n" .. desc .. season_hint .. "\n奖励: " .. reward)
+            end
         end
     end
 end
