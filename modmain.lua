@@ -55,6 +55,16 @@ GLOBAL.DAILYTASKS.TRANSLATIONS = {
     ["保持健康任务"] = "Health Task",
     ["保持理智任务"] = "Sanity Task",
     ["保持饱腹任务"] = "Hunger Task",
+    ["制作长矛任务"] = "Craft Spear",
+    ["制作火腿棒任务"] = "Craft Hambat",
+    ["制作暗夜剑任务"] = "Craft Night Sword",
+    ["制作排箫任务"] = "Craft Pan Flute",
+    ["制作火魔杖任务"] = "Craft Fire Staff",
+    ["制作冰魔杖任务"] = "Craft Ice Staff",
+    ["制作铥矿棒任务"] = "Craft Thulecite Club",
+    ["制作唤星者魔杖任务"] = "Craft Star Caller's Staff",
+    ["制作懒人魔杖任务"] = "Craft Lazy Explorer",
+    ["制作玻璃刀任务"] = "Craft Glass Cutter",
     
     -- UI文本
     ["当前每日任务："] = "Current Daily Tasks:",
@@ -95,7 +105,17 @@ GLOBAL.DAILYTASKS.TRANSLATIONS = {
     ["(%d+)个莎草纸"] = "%s papyrus",
     ["(%d+)个蝴蝶松饼"] = "%s butterfly muffin",
     ["(%d+)个小肉"] = "%s morsels",
-    ["(%d+)个蜘蛛腺体"] = "%s spider glands"
+    ["(%d+)个蜘蛛腺体"] = "%s spider glands",
+    ["制作1个长矛"] = "Craft 1 spear",
+    ["制作1个火腿棒"] = "Craft 1 hambat",
+    ["制作1个暗夜剑"] = "Craft 1 night sword",
+    ["制作1个排箫"] = "Craft 1 pan flute",
+    ["制作1个火魔杖"] = "Craft 1 fire staff",
+    ["制作1个冰魔杖"] = "Craft 1 ice staff",
+    ["制作1个铥矿棒"] = "Craft 1 thulecite club",
+    ["制作1个唤星者魔杖"] = "Craft 1 star caller's staff",
+    ["制作1个懒人魔杖"] = "Craft 1 lazy explorer",
+    ["制作1个玻璃刀"] = "Craft 1 glass cutter"
 }
 
 -- 添加翻译函数
@@ -473,7 +493,17 @@ GLOBAL.DAILYTASKS.GetTaskList = function()
         "生存任务",
         "保持健康任务",
         "保持理智任务",
-        "保持饱腹任务"
+        "保持饱腹任务",
+        "制作长矛任务",
+        "制作火腿棒任务",
+        "制作暗夜剑任务",
+        "制作排箫任务",
+        "制作火魔杖任务",
+        "制作冰魔杖任务",
+        "制作铥矿棒任务",
+        "制作唤星者魔杖任务",
+        "制作懒人魔杖任务",
+        "制作玻璃刀任务"
     }
 end
 
