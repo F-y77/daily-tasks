@@ -155,7 +155,15 @@ GLOBAL.DAILYTASKS.TRANSLATIONS = {
     ["制作1个黄金鹤嘴锄"] = "Craft 1 golden pickaxe",
     ["制作1个黄金铲子"] = "Craft 1 golden shovel",
     ["制作1个黄金园艺锄"] = "Craft 1 golden hoe",
-    ["制作1个黄金干草叉"] = "Craft 1 golden pitchfork"
+    ["制作1个黄金干草叉"] = "Craft 1 golden pitchfork",
+    
+    -- 添加新的翻译
+    ["今日统计："] = "Today's Statistics:",
+    ["已采矿："] = "Rocks Mined:",
+    ["已钓鱼："] = "Fish Caught:",
+    ["已击杀："] = "Kills:",
+    ["已击杀BOSS："] = "Boss Kills:",
+    ["已制作："] = "Items Crafted:",
 }
 
 -- 添加翻译函数
@@ -357,26 +365,17 @@ AddModRPCHandler("DailyTasks", "CheckProgress", function(player)
     if player then
         local msg = GLOBAL.DAILYTASKS.Translate("当前任务进度:") .. "\n"
         
+        -- 采矿统计
         if player.daily_rocks_mined then
             msg = msg .. GLOBAL.DAILYTASKS.Translate("已采矿:") .. " " .. player.daily_rocks_mined .. "\n"
         end
         
-        if player.daily_gold_mined then
-            msg = msg .. GLOBAL.DAILYTASKS.Translate("已采金:") .. " " .. player.daily_gold_mined .. "\n"
-        end
-        
-        if player.daily_marble_mined then
-            msg = msg .. GLOBAL.DAILYTASKS.Translate("已开采大理石:") .. " " .. player.daily_marble_mined .. "\n"
-        end
-        
+        -- 钓鱼统计
         if player.daily_fish_caught then
             msg = msg .. GLOBAL.DAILYTASKS.Translate("已钓鱼:") .. " " .. player.daily_fish_caught .. "\n"
         end
         
-        if player.daily_big_fish_caught then
-            msg = msg .. GLOBAL.DAILYTASKS.Translate("已钓大鱼:") .. " " .. player.daily_big_fish_caught .. "\n"
-        end
-        
+        -- 击杀统计
         if player.daily_kills then
             msg = msg .. GLOBAL.DAILYTASKS.Translate("已击杀:") .. "\n"
             for k, v in pairs(player.daily_kills) do
@@ -384,6 +383,7 @@ AddModRPCHandler("DailyTasks", "CheckProgress", function(player)
             end
         end
         
+        -- BOSS击杀统计
         if player.daily_bosses_killed then
             msg = msg .. GLOBAL.DAILYTASKS.Translate("已击杀Boss:") .. "\n"
             for k, v in pairs(player.daily_bosses_killed) do
@@ -391,30 +391,12 @@ AddModRPCHandler("DailyTasks", "CheckProgress", function(player)
             end
         end
         
-        if player.daily_structures_built then
-            msg = msg .. GLOBAL.DAILYTASKS.Translate("已建造:") .. "\n"
-            for k, v in pairs(player.daily_structures_built) do
-                msg = msg .. "  " .. k .. ": " .. v .. "\n"
-            end
-        end
-        
+        -- 制作统计
         if player.daily_items_crafted then
             msg = msg .. GLOBAL.DAILYTASKS.Translate("已制作:") .. "\n"
             for k, v in pairs(player.daily_items_crafted) do
                 msg = msg .. "  " .. k .. ": " .. v .. "\n"
             end
-        end
-        
-        if player.daily_treasures_dug then
-            msg = msg .. GLOBAL.DAILYTASKS.Translate("已挖掘宝藏:") .. " " .. player.daily_treasures_dug .. "\n"
-        end
-        
-        if player.daily_areas_discovered then
-            msg = msg .. GLOBAL.DAILYTASKS.Translate("已探索新区域:") .. " " .. player.daily_areas_discovered .. "\n"
-        end
-        
-        if player.daily_tools_crafted then
-            msg = msg .. GLOBAL.DAILYTASKS.Translate("已制作工具:") .. " " .. player.daily_tools_crafted .. "\n"
         end
         
         if player.components.talker then
@@ -529,7 +511,6 @@ GLOBAL.DAILYTASKS.GetTaskList = function()
         "采金任务",
         "采集大理石任务",
         "钓鱼任务",
-        "钓大鱼任务",
         "生存任务",
         "保持健康任务",
         "保持理智任务",
@@ -645,4 +626,95 @@ GLOBAL.DAILYTASKS.TranslateRewardDescription = function(desc)
     end
     
     return desc
-end 
+end
+
+-- 修改按V键的处理函数，优化任务统计面板
+
+GLOBAL.TheInput:AddKeyDownHandler(GLOBAL.KEY_V, function()
+    if GLOBAL.ThePlayer and GLOBAL.ThePlayer.components.dailytasks then
+        local tasks = GLOBAL.ThePlayer.components.dailytasks
+        local msg = GLOBAL.DAILYTASKS.Translate("当前每日任务：") .. "\n\n"
+        
+        -- 显示任务信息
+        if tasks.config.TASK_COUNT > 1 and #tasks.current_tasks > 0 then
+            for i, task in ipairs(tasks.current_tasks) do
+                local task_name = type(task.name) == "function" and task.name() or GLOBAL.DAILYTASKS.Translate(task.name)
+                local desc = type(task.description) == "function" and task.description() or GLOBAL.DAILYTASKS.Translate(task.description)
+                local reward = type(task.reward_description) == "function" and task.reward_description() or GLOBAL.DAILYTASKS.Translate(task.reward_description)
+                local status = tasks.tasks_completed[i] and GLOBAL.DAILYTASKS.Translate("已完成") or GLOBAL.DAILYTASKS.Translate("未完成")
+                
+                msg = msg .. "#" .. i .. ": " .. task_name .. "\n"
+                msg = msg .. desc .. "\n"
+                msg = msg .. GLOBAL.DAILYTASKS.Translate("奖励:") .. " " .. reward .. "\n"
+                msg = msg .. GLOBAL.DAILYTASKS.Translate("状态:") .. " " .. status .. "\n\n"
+            end
+        elseif tasks.current_task then
+            local task_name = type(tasks.current_task.name) == "function" and tasks.current_task.name() or GLOBAL.DAILYTASKS.Translate(tasks.current_task.name)
+            local desc = type(tasks.current_task.description) == "function" and tasks.current_task.description() or GLOBAL.DAILYTASKS.Translate(tasks.current_task.description)
+            local reward = type(tasks.current_task.reward_description) == "function" and tasks.current_task.reward_description() or GLOBAL.DAILYTASKS.Translate(tasks.current_task.reward_description)
+            local status = tasks.task_completed and GLOBAL.DAILYTASKS.Translate("已完成") or GLOBAL.DAILYTASKS.Translate("未完成")
+            
+            msg = msg .. task_name .. "\n"
+            msg = msg .. desc .. "\n"
+            msg = msg .. GLOBAL.DAILYTASKS.Translate("奖励:") .. " " .. reward .. "\n"
+            msg = msg .. GLOBAL.DAILYTASKS.Translate("状态:") .. " " .. status
+        else
+            msg = msg .. GLOBAL.DAILYTASKS.Translate("暂无任务")
+        end
+        
+        -- 添加简化的统计信息
+        msg = msg .. "\n\n" .. GLOBAL.DAILYTASKS.Translate("今日统计：") .. "\n"
+        
+        -- 采矿统计
+        msg = msg .. GLOBAL.DAILYTASKS.Translate("已采矿：") .. " " .. (GLOBAL.ThePlayer.daily_rocks_mined or 0) .. "\n"
+        
+        -- 钓鱼统计
+        msg = msg .. GLOBAL.DAILYTASKS.Translate("已钓鱼：") .. " " .. (GLOBAL.ThePlayer.daily_fish_caught or 0) .. "\n"
+        
+        -- 击杀统计
+        local total_kills = 0
+        local boss_kills = 0
+        if GLOBAL.ThePlayer.daily_kills then
+            for creature, count in pairs(GLOBAL.ThePlayer.daily_kills) do
+                total_kills = total_kills + count
+            end
+        end
+        msg = msg .. GLOBAL.DAILYTASKS.Translate("已击杀：") .. " " .. total_kills .. "\n"
+        
+        -- BOSS击杀统计
+        local boss_kills = 0
+        if GLOBAL.ThePlayer.daily_kills then
+            for creature, count in pairs(GLOBAL.ThePlayer.daily_kills) do
+                -- 检查是否是BOSS
+                if creature == "deerclops" or 
+                   creature == "moose" or 
+                   creature == "dragonfly" or 
+                   creature == "bearger" or 
+                   creature == "klaus" or 
+                   creature == "antlion" or 
+                   creature == "minotaur" or 
+                   creature == "beequeen" or 
+                   creature == "toadstool" or 
+                   creature == "stalker" or 
+                   creature == "stalker_atrium" then
+                    boss_kills = boss_kills + count
+                end
+            end
+        end
+        msg = msg .. GLOBAL.DAILYTASKS.Translate("已击杀BOSS：") .. " " .. boss_kills .. "\n"
+        
+        -- 制作统计
+        local total_crafted = 0
+        if GLOBAL.ThePlayer.daily_items_crafted then
+            for _, count in pairs(GLOBAL.ThePlayer.daily_items_crafted) do
+                total_crafted = total_crafted + count
+            end
+        end
+        msg = msg .. GLOBAL.DAILYTASKS.Translate("已制作：") .. " " .. total_crafted
+        
+        -- 显示消息
+        if GLOBAL.ThePlayer.components.talker then
+            GLOBAL.ThePlayer.components.talker:Say(msg)
+        end
+    end
+end) 

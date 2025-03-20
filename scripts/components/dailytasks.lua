@@ -339,7 +339,7 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "采金任务",
+            name = "采金矿石任务（只包含主世界金矿石）",
             description = function() 
                 local count = math.ceil(1 * self.config.DIFFICULTY_MULTIPLIER)
                 return "挖掘" .. count .. "个金矿石" 
@@ -2091,12 +2091,11 @@ function DailyTasks:OnUpdate()
                 self:CompleteTask(i)
             end
         end
-    else if self.current_task and not self.task_completed then
+    elseif self.current_task and not self.task_completed then
         -- 单任务模式
         if self.current_task.check(self.inst) then
             self:CompleteTask()
         end
-    end
     end
 end
 
@@ -2163,8 +2162,12 @@ function DailyTasks:SelectTasks()
         local current_season = TheWorld.state.season
         
         for i, task in ipairs(self.tasks) do
-            -- 跳过所有烹饪相关任务
-            if task.name ~= "烹饪任务" and 
+            -- 跳过所有已移除的任务
+            if task.name ~= "建造房子任务" and 
+               task.name ~= "寻找宝藏任务" and 
+               task.name ~= "探索任务" and 
+               task.name ~= "钓大鱼任务" and
+               task.name ~= "烹饪任务" and 
                task.name ~= "烹饪素食任务" and 
                task.name ~= "烹饪肉类食物任务" and 
                task.name ~= "烹饪海鲜食物任务" and
