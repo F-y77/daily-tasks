@@ -1496,6 +1496,546 @@ local DailyTasks = Class(function(self, inst)
                 local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
                 return count .. "个月亮碎片"
             end
+        },
+        {
+            name = "制作木甲任务",
+            description = function() 
+                return "制作1个木甲" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "armorwood"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(8 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("log"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(8 * self.config.REWARD_MULTIPLIER)
+                return count .. "个木头"
+            end
+        },
+        {
+            name = "制作暗夜甲任务",
+            description = function() 
+                return "制作1个暗夜甲" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "armor_sanity"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(4 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(4 * self.config.REWARD_MULTIPLIER)
+                return count .. "个噩梦燃料"
+            end
+        },
+        {
+            name = "制作大理石甲任务",
+            description = function() 
+                return "制作1个大理石甲" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "armormarble"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("marble"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
+                return count .. "个大理石"
+            end
+        },
+        {
+            name = "制作绝望石盔甲任务",
+            description = function() 
+                return "制作1个绝望石盔甲" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "armorruins"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("thulecite"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                return count .. "个铥矿"
+            end
+        },
+        {
+            name = "制作橄榄球头盔任务",
+            description = function() 
+                return "制作1个橄榄球头盔" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "footballhat"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("pigskin"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                return count .. "个猪皮"
+            end
+        },
+        {
+            name = "制作养蜂帽任务",
+            description = function() 
+                return "制作1个养蜂帽" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "beehat"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("honey"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
+                return count .. "个蜂蜜"
+            end
+        },
+        {
+            name = "制作背包任务",
+            description = function() 
+                return "制作1个背包" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "backpack"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(8 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("cutgrass"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(8 * self.config.REWARD_MULTIPLIER)
+                return count .. "个割下的草"
+            end
+        },
+        {
+            name = "制作雨伞任务",
+            description = function() 
+                return "制作1个雨伞" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "umbrella"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("pigskin"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                return count .. "个猪皮"
+            end
+        },
+        {
+            name = "制作羽毛扇任务",
+            description = function() 
+                return "制作1个羽毛扇" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "featherfan"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("goose_feather"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                return count .. "个鹅毛"
+            end
+        },
+        {
+            name = "制作花环任务",
+            description = function() 
+                return "制作1个花环" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "flowerhat"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("petals"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
+                return count .. "个花瓣"
+            end
+        },
+        {
+            name = "制作草帽任务",
+            description = function() 
+                return "制作1个草帽" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "strawhat"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(10 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("cutgrass"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(10 * self.config.REWARD_MULTIPLIER)
+                return count .. "个割下的草"
+            end
+        },
+        {
+            name = "制作高礼帽任务",
+            description = function() 
+                return "制作1个高礼帽" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "tophat"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(6 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("silk"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(6 * self.config.REWARD_MULTIPLIER)
+                return count .. "个蜘蛛丝"
+            end
+        },
+        {
+            name = "制作冬帽任务",
+            description = function() 
+                return "制作1个冬帽" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "winterhat"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(4 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("rabbit"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(4 * self.config.REWARD_MULTIPLIER)
+                return count .. "只兔子"
+            end
+        },
+        {
+            name = "制作牛角帽任务",
+            description = function() 
+                return "制作1个牛角帽" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "beefalohat"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("beefalowool"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(5 * self.config.REWARD_MULTIPLIER)
+                return count .. "个牛毛"
+            end
+        },
+        {
+            name = "制作步行手杖任务",
+            description = function() 
+                return "制作1个步行手杖" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "cane"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("walrus_tusk"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                return count .. "个海象牙"
+            end
+        },
+        {
+            name = "制作黄金斧头任务",
+            description = function() 
+                return "制作1个黄金斧头" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "goldenaxe"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                return count .. "个金块"
+            end
+        },
+        {
+            name = "制作黄金鹤嘴锄任务",
+            description = function() 
+                return "制作1个黄金鹤嘴锄" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "goldenpickaxe"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                return count .. "个金块"
+            end
+        },
+        {
+            name = "制作黄金铲子任务",
+            description = function() 
+                return "制作1个黄金铲子" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "goldenshovel"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                return count .. "个金块"
+            end
+        },
+        {
+            name = "制作黄金园艺锄任务",
+            description = function() 
+                return "制作1个黄金园艺锄" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "golden_farm_hoe"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                return count .. "个金块"
+            end
+        },
+        {
+            name = "制作黄金干草叉任务",
+            description = function() 
+                return "制作1个黄金干草叉" 
+            end,
+            check = function(player)
+                if player.components.inventory then
+                    local items = player.components.inventory:FindItems(function(item) 
+                        return item.prefab == "goldenpitchfork"
+                    end)
+                    return #items > 0
+                end
+                return false
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
+                return count .. "个金块"
+            end
         }
     }
     
