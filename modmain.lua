@@ -9,8 +9,8 @@ local TASK_COUNT = GetModConfigData("TASK_COUNT") or 3
 local TASK_DIFFICULTY = GetModConfigData("TASK_DIFFICULTY") or "medium"
 local REWARD_MULTIPLIER = GetModConfigData("REWARD_MULTIPLIER") or 1
 local SHOW_NOTIFICATIONS = GetModConfigData("SHOW_NOTIFICATIONS") or true
-local CHECK_TASK_KEY = GetModConfigData("CHECK_TASK_KEY") or "KEY_T"
-local CHECK_PROGRESS_KEY = GetModConfigData("CHECK_PROGRESS_KEY") or "KEY_Y"
+local CHECK_TASK_KEY = GetModConfigData("CHECK_TASK_KEY") or "KEY_R"
+local CHECK_PROGRESS_KEY = GetModConfigData("CHECK_PROGRESS_KEY") or "KEY_V"
 
 -- 获取开发者模式配置
 local DEVELOPER_MODE = GetModConfigData("DEVELOPER_MODE") or false
@@ -251,7 +251,7 @@ local function OnPlayerSpawn(inst)
     inst.daily_big_fish_caught = 0
     inst.daily_items_collected = {}
     inst.daily_items_planted = 0
-    inst.daily_distance_walked = 0
+    inst.daily_distance_walked = 0          
     inst.daily_structures_built = {}
     inst.daily_items_crafted = {}
     inst.daily_bosses_killed = {}
@@ -282,22 +282,6 @@ local function OnPlayerSpawn(inst)
             if data.target.prefab == "rock_ice" or data.target.prefab == "rock_moon" then
                 inst.daily_marble_mined = (inst.daily_marble_mined or 0) + 1
                 print("已采集大理石: " .. inst.daily_marble_mined)
-            end
-        end
-    end)
-    
-    -- 监听钓鱼事件
-    inst:ListenForEvent("fishingcollect", function(inst, data)
-        if data and data.fish then
-            inst.daily_fish_caught = (inst.daily_fish_caught or 0) + 1
-            print("已钓鱼: " .. inst.daily_fish_caught)
-            
-            -- 检查是否是大鱼
-            if data.fish.components and data.fish.components.perishable and 
-               data.fish.components.perishable.perishtime and 
-               data.fish.components.perishable.perishtime >= TUNING.PERISH_MED then
-                inst.daily_big_fish_caught = (inst.daily_big_fish_caught or 0) + 1
-                print("已钓大鱼: " .. inst.daily_big_fish_caught)
             end
         end
     end)
@@ -370,11 +354,6 @@ AddModRPCHandler("DailyTasks", "CheckProgress", function(player)
             msg = msg .. GLOBAL.DAILYTASKS.Translate("已采矿:") .. " " .. player.daily_rocks_mined .. "\n"
         end
         
-        -- 钓鱼统计
-        if player.daily_fish_caught then
-            msg = msg .. GLOBAL.DAILYTASKS.Translate("已钓鱼:") .. " " .. player.daily_fish_caught .. "\n"
-        end
-        
         -- 击杀统计
         if player.daily_kills then
             msg = msg .. GLOBAL.DAILYTASKS.Translate("已击杀:") .. "\n"
@@ -387,14 +366,6 @@ AddModRPCHandler("DailyTasks", "CheckProgress", function(player)
         if player.daily_bosses_killed then
             msg = msg .. GLOBAL.DAILYTASKS.Translate("已击杀Boss:") .. "\n"
             for k, v in pairs(player.daily_bosses_killed) do
-                msg = msg .. "  " .. k .. ": " .. v .. "\n"
-            end
-        end
-        
-        -- 制作统计
-        if player.daily_items_crafted then
-            msg = msg .. GLOBAL.DAILYTASKS.Translate("已制作:") .. "\n"
-            for k, v in pairs(player.daily_items_crafted) do
                 msg = msg .. "  " .. k .. ": " .. v .. "\n"
             end
         end
@@ -435,17 +406,11 @@ local function SetupKeyHandlers(inst)
                     "daily_rocks_mined",
                     "daily_gold_mined",
                     "daily_marble_mined",
-                    "daily_fish_caught",
-                    "daily_big_fish_caught",
                     "daily_kills",
                     "daily_items_collected",
                     "daily_items_planted",
                     "daily_structures_built",
-                    "daily_items_crafted",
-                    "daily_bosses_killed",
-                    "daily_ocean_fish_caught",
-                    "daily_treasures_dug",
-                    "daily_areas_discovered"
+                    "daily_bosses_killed"
                 }
                 
                 for _, stat in ipairs(stats) do
@@ -668,9 +633,6 @@ GLOBAL.TheInput:AddKeyDownHandler(GLOBAL.KEY_V, function()
         -- 采矿统计
         msg = msg .. GLOBAL.DAILYTASKS.Translate("已采矿：") .. " " .. (GLOBAL.ThePlayer.daily_rocks_mined or 0) .. "\n"
         
-        -- 钓鱼统计
-        msg = msg .. GLOBAL.DAILYTASKS.Translate("已钓鱼：") .. " " .. (GLOBAL.ThePlayer.daily_fish_caught or 0) .. "\n"
-        
         -- 击杀统计
         local total_kills = 0
         local boss_kills = 0
@@ -703,18 +665,81 @@ GLOBAL.TheInput:AddKeyDownHandler(GLOBAL.KEY_V, function()
         end
         msg = msg .. GLOBAL.DAILYTASKS.Translate("已击杀BOSS：") .. " " .. boss_kills .. "\n"
         
-        -- 制作统计
-        local total_crafted = 0
-        if GLOBAL.ThePlayer.daily_items_crafted then
-            for _, count in pairs(GLOBAL.ThePlayer.daily_items_crafted) do
-                total_crafted = total_crafted + count
-            end
-        end
-        msg = msg .. GLOBAL.DAILYTASKS.Translate("已制作：") .. " " .. total_crafted
-        
         -- 显示消息
         if GLOBAL.ThePlayer.components.talker then
             GLOBAL.ThePlayer.components.talker:Say(msg)
         end
     end
+end)
+
+--[[ 添加刷新任务的RPC
+AddModRPCHandler("DailyTasks", "RefreshTasks", function(player)
+    if not player then return end
+    
+    -- 添加安全检查
+    if not player.components or not player.components.dailytasks then
+        print("[每日任务系统] 错误: 玩家缺少dailytasks组件")
+        return
+    end
+    
+    local tasks = player.components.dailytasks
+    
+    -- 使用pcall安全调用函数
+    local success, error_msg = pcall(function()
+        -- 刷新任务
+        if tasks.config.TASK_COUNT > 1 then
+            -- 多任务模式
+            tasks.current_tasks = {}
+            tasks.tasks_completed = {}
+        else
+            -- 单任务模式
+            tasks.current_task = nil
+            tasks.task_completed = false
+        end
+        
+        -- 重新生成任务
+        tasks:GenerateTasks()
+        
+        -- 通知玩家
+        if player.components.talker then
+            player.components.talker:Say("每日任务已刷新！")
+        end
+        
+        -- 添加视觉效果
+        if GLOBAL.SpawnPrefab then
+            local fx = GLOBAL.SpawnPrefab("pandorachest_reset")
+            if fx then
+                fx.Transform:SetPosition(player.Transform:GetWorldPosition())
+            end
+        end
+    end)
+    
+    if not success then
+        print("[每日任务系统] 刷新任务时发生错误: " .. tostring(error_msg))
+    end
+end)]]
+
+-- 注册新食物类型（用于Among Us任务）
+AddPrefabPostInit("monstertartare", function(inst)
+    inst.components.edible:SetOnEatenFn(function(inst, eater)
+        eater.components.health:DoDelta(-20)
+        eater:PushEvent("death", {cause = "poisoned_food", afflicter = inst.components.inventoryitem.owner})
+    end)
+end)
+
+-- 添加红色蘑菇帽
+AddPrefabPostInit("red_mushroomhat", function(inst)
+    inst:AddComponent("equippable")
+    inst.components.equippable.equipslot = EQUIPSLOTS.HEAD
+end)
+
+-- 初始化特殊任务状态
+AddPlayerPostInit(function(inst)
+    inst:ListenForEvent("newstate", function(inst, data)
+        if data and data.state == "taskreset" then
+            inst.curse_cycle_completed = nil
+            inst.social_anxiety_days = nil
+            inst.among_us_kills = nil
+        end
+    end)
 end) 

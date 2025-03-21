@@ -12,12 +12,10 @@ local DailyTasks = Class(function(self, inst)
     -- 初始化玩家的每日统计（移除烹饪相关的初始化）
     self.inst.daily_kills = {}
     self.inst.daily_rocks_mined = 0
-    self.inst.daily_fish_caught = 0
     self.inst.daily_items_collected = {}
     self.inst.daily_items_planted = 0
     self.inst.daily_distance_walked = 0
     self.inst.daily_structures_built = {}
-    self.inst.daily_items_crafted = {}
     self.inst.daily_bosses_killed = {}
     self.inst.daily_health_restored = 0
     self.inst.daily_sanity_restored = 0
@@ -2036,6 +2034,256 @@ local DailyTasks = Class(function(self, inst)
                 local count = math.ceil(3 * self.config.REWARD_MULTIPLIER)
                 return count .. "个金块"
             end
+        },
+        {
+            name = "超级马里奥挑战",
+            description = "戴着红色蘑菇帽击杀蘑菇地精(mushgnome)",
+            check = function(player)
+                -- 检查是否戴着红色蘑菇帽
+                local hat = player.components.inventory:GetEquippedItem(EQUIPSLOTS.HEAD)
+                if hat and hat.prefab == "red_mushroomhat" then
+                    -- 检查是否击杀了蘑菇地精
+                    return player.daily_kills and player.daily_kills.mushgnome and player.daily_kills.mushgnome >= 1
+                end
+                return false
+            end,
+            reward = function(player)
+                player.components.inventory:GiveItem(SpawnPrefab("mushroom_light"))
+                player.components.inventory:GiveItem(SpawnPrefab("red_cap"))
+                player.components.health:SetInvincible(true)
+                player:DoTaskInTime(60, function() 
+                    player.components.health:SetInvincible(false)
+                end)
+            end,
+            reward_description = "蘑菇灯+红蘑菇+60秒无敌",
+            special = true
+        },
+        {
+            name = "Among Us 厨房危机",
+            description = "给队友喂食扣血食物",
+            check = function(player)
+                return player.among_us_feeds and player.among_us_feeds >= 1
+            end,
+            start = function(player)
+                player:ListenForEvent("oneat", function(inst, data)
+                    if data and data.food and data.feeder == player then
+                        if data.food.prefab == "monstertartare" and data.eater ~= player then
+                            player.among_us_feeds = (player.among_us_feeds or 0) + 1
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                player.components.inventory:GiveItem(SpawnPrefab("krampus_sack"))
+                player.components.sanity:SetMax(50)
+            end,
+            reward_description = "坎普斯背包+50理智上限",
+            special = true
+        },
+        {
+            name = "社恐波奇酱",
+            description = "保持独处一整天",
+            check = function(player)
+                return player.social_anxiety_days and player.social_anxiety_days >= 1
+            end,
+            start = function(player)
+                player.social_anxiety_days = 0
+                player:DoPeriodicTask(10, function() 
+                    local x,y,z = player.Transform:GetWorldPosition()
+                    local ents = TheSim:FindEntities(x,y,z, 5, {"_combat","player"})
+                    -- 排除自己后判断是否有其他实体
+                    if #ents > 1 then 
+                        player.social_anxiety_days = 0
+                    else
+                        -- 每10秒增加1/240天（现实1天=游戏8分钟）
+                        player.social_anxiety_days = (player.social_anxiety_days or 0) + (10/480)
+                    end
+                end)
+            end,
+            reward = function(player)
+                player.components.inventory:GiveItem(SpawnPrefab("flowerhat"))
+                player.components.sanity:SetRateMultiplier(2.0)
+            end,
+            reward_description = "花环+双倍理智恢复",
+            special = true
+        },
+        {
+            name = "恐怖游轮循环",
+            description = "完成死亡复仇循环",
+            check = function(player)
+                return player.curse_cycle_completed
+            end,
+            start = function(player)
+                player.curse_kills = {}
+                player:ListenForEvent("death", function(inst, data)
+                    if data and data.attacker then
+                        local killer_type = data.attacker.prefab
+                        player:DoTaskInTime(0.5, function()  -- 稍后检查复活
+                            if player:IsValid() and player.components.health:IsDead() then
+                                player:ListenForEvent("respawn", function()
+                                    player:DoTaskInTime(1, function()
+                                        player:ListenForEvent("death", function(_, data2)
+                                            if data2 and data2.attacker and 
+                                               data2.attacker.prefab == killer_type then
+                                                player.curse_cycle_completed = true
+                                            end
+                                        end)
+                                    end)
+                                end)
+                            end
+                        end)
+                    end
+                end)
+            end,
+            reward = function(player)
+                player.components.inventory:GiveItem(SpawnPrefab("reviver"))
+                player.components.health:StartRegen(2, 1)
+            end,
+            reward_description = "复活护符+生命恢复",
+            special = true
+        },
+        {
+            name = "咩咩羊启示录",
+            description = "封你为神 - 拥有20个信徒(被驯服的猪人、兔人、鱼人)",
+            check = function(player)
+                -- 检查是否拥有足够的信徒
+                local follower_count = 0
+                for k, v in pairs(player.components.leader.followers) do
+                    if k:HasTag("pig") or k:HasTag("rabbit") or k:HasTag("merm") then
+                        follower_count = follower_count + 1
+                    end
+                end
+                return follower_count >= 20  -- 改为20个
+            end,
+            start = function(player)
+                -- 初始化任务状态
+                player.sheep_cult_started = true
+                
+                -- 给予玩家一些肉来吸引信徒
+                if player.components.inventory then
+                    for i=1, 10 do
+                        player.components.inventory:GiveItem(SpawnPrefab("meat"))
+                    end
+                end
+                
+                -- 通知玩家
+                if player.components.talker then
+                    player.components.talker:Say("咩咩羊启示录任务开始！收集20个信徒来崇拜你...")
+                end
+                
+                return true
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予咩咩羊主题奖励
+                    -- 神圣权杖(步行手杖)
+                    local cane = SpawnPrefab("cane")
+                    if cane and cane.components.colouradder then
+                        cane.components.colouradder:SetColour(1, 0.8, 0)
+                    end
+                    player.components.inventory:GiveItem(cane)
+                    
+                    -- 神圣头冠(蜂后帽)
+                    player.components.inventory:GiveItem(SpawnPrefab("beehat"))
+                    
+                    -- 信徒贡品(各种食物)
+                    player.components.inventory:GiveItem(SpawnPrefab("butterflymuffin"))
+                    player.components.inventory:GiveItem(SpawnPrefab("honeynuggets"))
+                    player.components.inventory:GiveItem(SpawnPrefab("dragonpie"))
+                    player.components.inventory:GiveItem(SpawnPrefab("taffy"))
+                    player.components.inventory:GiveItem(SpawnPrefab("baconeggs"))
+                    
+                    -- 特殊奖励：神圣光环(发光浆果)
+                    for i=1, 5 do
+                        player.components.inventory:GiveItem(SpawnPrefab("wormlight"))
+                    end
+                    
+                    -- 临时神圣光环效果
+                    local light = SpawnPrefab("minerhatlight")
+                    light.entity:SetParent(player.entity)
+                    light.AnimState:SetMultColour(1, 0.8, 0, 0.8)
+                    
+                    player:DoTaskInTime(600, function()
+                        if light and light:IsValid() then
+                            light:Remove()
+                            if player and player.components and player.components.talker then
+                                player.components.talker:Say("神圣光环效果已结束！")
+                            end
+                        end
+                    end)
+                    
+                    -- 增强领导能力
+                    if player.components.leader then
+                        player.components.leader.oldmaxfollowers = player.components.leader.maxfollowers
+                        player.components.leader.maxfollowers = 40
+                        
+                        player:DoTaskInTime(600, function()
+                            if player and player.components and player.components.leader then
+                                player.components.leader.maxfollowers = player.components.leader.oldmaxfollowers or 10
+                            end
+                        end)
+                    end
+                    
+                    if player.components.talker then
+                        player.components.talker:Say("获得神圣光环！10分钟内你将拥有光环效果和增强的领导能力！")
+                    end
+                end
+            end,
+            reward_description = "1根神圣权杖(步行手杖)、1顶神圣头冠(蜂后帽)、5种信徒贡品(美食)、5个神圣光环(发光浆果)，以及10分钟神圣光环效果和增强的领导能力",
+            special = true, -- 标记为特殊任务
+            
+            -- 特殊事件监听器设置函数
+            setup_listeners = function(self, player)
+                -- 监听跟随者变化
+                player:ListenForEvent("followerchange", function(inst)
+                    if player.sheep_cult_started then
+                        local follower_count = 0
+                        
+                        -- 计算所有跟随者
+                        for k, v in pairs(player.components.leader.followers) do
+                            if k:HasTag("pig") or k:HasTag("rabbit") or k:HasTag("merm") then
+                                follower_count = follower_count + 1
+                                
+                                -- 添加视觉效果给信徒
+                                if not k:HasTag("cult_follower") then
+                                    k:AddTag("cult_follower")
+                                    
+                                    -- 添加光环效果
+                                    local fx = SpawnPrefab("small_puff")
+                                    fx.entity:SetParent(k.entity)
+                                    fx.Transform:SetPosition(0, 2, 0)
+                                    
+                                    -- 改变外观
+                                    k.AnimState:SetMultColour(1, 0.9, 0.7, 1)
+                                end
+                            end
+                        end
+                        
+                        -- 通知玩家
+                        if player.components.talker then
+                            player.components.talker:Say("信徒数量: " .. follower_count .. "/20")
+                        end
+                        
+                        -- 当达到一定数量时，信徒开始崇拜玩家
+                        if follower_count >= 10 and follower_count % 5 == 0 then
+                            -- 信徒围绕玩家跳舞
+                            for k, v in pairs(player.components.leader.followers) do
+                                if k:HasTag("cult_follower") and k.sg and k.sg.GoToState then
+                                    k.sg:GoToState("happy")
+                                end
+                            end
+                            
+                            -- 播放特殊音效
+                            player.SoundEmitter:PlaySound("dontstarve/creatures/bunnyman/idle_med")
+                            
+                            -- 通知玩家
+                            if player.components.talker then
+                                player.components.talker:Say("信徒们开始崇拜你！")
+                            end
+                        end
+                    end
+                end)
+            end
         }
     }
     
@@ -2114,14 +2362,13 @@ function DailyTasks:NewDay()
     self.inst.daily_items_planted = 0
     self.inst.daily_distance_walked = 0
     self.inst.daily_structures_built = {}
-    self.inst.daily_items_crafted = {}
     self.inst.daily_bosses_killed = {}
     self.inst.daily_health_restored = 0
     self.inst.daily_sanity_restored = 0
     self.inst.daily_hunger_restored = 0
     
     -- 选择新任务
-    self:SelectTasks()
+    self:GenerateTasks()
 end
 
 function DailyTasks:CompleteTask(task_index)
@@ -2155,45 +2402,33 @@ function DailyTasks:CompleteTask(task_index)
     end
 end
 
-function DailyTasks:SelectTasks()
+function DailyTasks:GenerateTasks()
+    -- 检查是否是多任务模式
     if self.config.TASK_COUNT > 1 then
         -- 多任务模式
         local available_tasks = {}
         local current_season = TheWorld.state.season
         
+        -- 收集所有可用任务
         for i, task in ipairs(self.tasks) do
-            -- 跳过所有已移除的任务
-            if task.name ~= "建造房子任务" and 
-               task.name ~= "寻找宝藏任务" and 
-               task.name ~= "探索任务" and 
-               task.name ~= "钓大鱼任务" and
-               task.name ~= "烹饪任务" and 
-               task.name ~= "烹饪素食任务" and 
-               task.name ~= "烹饪肉类食物任务" and 
-               task.name ~= "烹饪海鲜食物任务" and
-               task.name ~= "烹饪高级食物任务" then
-                
-                -- 季节性任务检查
-                if task.name == "采冰任务" or 
-                   task.name == "狩猎海象任务" or 
-                   task.name == "狩猎蓝色猎犬任务" then
-                    -- 冬季限定任务
-                    if current_season == "winter" then
-                        table.insert(available_tasks, i)
-                    end
-                elseif task.name == "狩猎红色猎犬任务" then
-                    -- 夏季限定任务
-                    if current_season == "summer" then
-                        table.insert(available_tasks, i)
-                    end
-                else
-                    -- 其他任务正常添加
-                    table.insert(available_tasks, i)
+            -- 季节检查
+            local season_ok = true
+            if task.season_hint then
+                if task.season_hint == "冬季出没" and current_season ~= "winter" then
+                    season_ok = false
+                elseif task.season_hint == "夏季出没" and current_season ~= "summer" then
+                    season_ok = false
                 end
+            end
+            
+            -- 如果任务适合当前季节，添加到可用任务列表
+            if season_ok then
+                table.insert(available_tasks, i)
             end
         end
         
-        for i=1, math.min(self.config.TASK_COUNT, #available_tasks) do
+        -- 随机选择指定数量的任务
+        for i = 1, self.config.TASK_COUNT do
             if #available_tasks > 0 then
                 local index = math.random(1, #available_tasks)
                 local task_index = available_tasks[index]
@@ -2212,30 +2447,37 @@ function DailyTasks:SelectTasks()
                     local msg = "新的每日任务 #" .. i .. ": " .. task_name .. "\n" .. desc .. "\n奖励: " .. reward
                     self.inst.components.talker:Say(DAILYTASKS.Translate(msg))
                 end
+                
+                -- 如果任务有特殊的setup_listeners函数，调用它
+                if task.setup_listeners then
+                    task.setup_listeners(self, self.inst)
+                end
+                
+                -- 如果任务有start函数，调用它
+                if task.start then
+                    task.start(self.inst)
+                end
             end
         end
     else
-        -- 单任务模式（兼容旧版）
+        -- 单任务模式
         local available_tasks = {}
         local current_season = TheWorld.state.season
         
         for i, task in ipairs(self.tasks) do
-            -- 跳过所有烹饪相关任务
-            if task.name ~= "烹饪任务" and 
-               task.name ~= "烹饪素食任务" and 
-               task.name ~= "烹饪肉类食物任务" and 
-               task.name ~= "烹饪海鲜食物任务" and
-               task.name ~= "烹饪高级食物任务" then
-                
-                -- 如果是采冰任务，只在冬季添加到可用任务列表
-                if task.name == "采冰任务" then
-                    if current_season == "winter" then
-                        table.insert(available_tasks, i)
-                    end
-                else
-                    -- 其他任务正常添加
-                    table.insert(available_tasks, i)
+            -- 季节检查
+            local season_ok = true
+            if task.season_hint then
+                if task.season_hint == "冬季出没" and current_season ~= "winter" then
+                    season_ok = false
+                elseif task.season_hint == "夏季出没" and current_season ~= "summer" then
+                    season_ok = false
                 end
+            end
+            
+            -- 如果任务适合当前季节，添加到可用任务列表
+            if season_ok then
+                table.insert(available_tasks, i)
             end
         end
         
@@ -2251,6 +2493,16 @@ function DailyTasks:SelectTasks()
                 
                 local msg = "新的每日任务: " .. task_name .. "\n" .. desc .. "\n奖励: " .. reward
                 self.inst.components.talker:Say(DAILYTASKS.Translate(msg))
+            end
+            
+            -- 如果任务有特殊的setup_listeners函数，调用它
+            if self.current_task.setup_listeners then
+                self.current_task.setup_listeners(self, self.inst)
+            end
+            
+            -- 如果任务有start函数，调用它
+            if self.current_task.start then
+                self.current_task.start(self.inst)
             end
         end
     end
