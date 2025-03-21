@@ -2284,6 +2284,523 @@ local DailyTasks = Class(function(self, inst)
                     end
                 end)
             end
+        },
+        {
+            name = "猎人的荣耀",
+            description = "在一天内猎杀3种不同的大型生物",
+            check = function(player)
+                if not player.daily_boss_kills then return false end
+                local count = 0
+                for boss, _ in pairs(player.daily_boss_kills) do
+                    count = count + 1
+                end
+                return count >= 3
+            end,
+            start = function(player)
+                player.daily_boss_kills = {}
+                player:ListenForEvent("killed", function(inst, data)
+                    if data and data.victim then
+                        if data.victim:HasTag("epic") or 
+                           data.victim.prefab == "koalefant_summer" or 
+                           data.victim.prefab == "koalefant_winter" or
+                           data.victim.prefab == "warg" or
+                           data.victim.prefab == "spat" then
+                            player.daily_boss_kills[data.victim.prefab] = true
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                -- 给予猎人奖励
+                player.components.inventory:GiveItem(SpawnPrefab("meat"))
+                player.components.inventory:GiveItem(SpawnPrefab("meat"))
+                player.components.inventory:GiveItem(SpawnPrefab("meat"))
+                player.components.inventory:GiveItem(SpawnPrefab("houndstooth"))
+                player.components.inventory:GiveItem(SpawnPrefab("houndstooth"))
+                
+                -- 临时提升伤害
+                if player.components.combat then
+                    local old_damage_mult = player.components.combat.externaldamagemultipliers:Get("hunter_bonus")
+                    player.components.combat.externaldamagemultipliers:SetModifier("hunter_bonus", 1.5)
+                    player:DoTaskInTime(300, function() -- 5分钟后恢复
+                        if player.components.combat then
+                            player.components.combat.externaldamagemultipliers:RemoveModifier("hunter_bonus")
+                        end
+                    end)
+                end
+            end,
+            reward_description = "3个肉、2个狗牙，以及5分钟的伤害提升(+50%)"
+        },
+        {
+            name = "工匠大师",
+            description = "在一天内制作10件不同的物品",
+            check = function(player)
+                return player.daily_crafted_items and #player.daily_crafted_items >= 10
+            end,
+            start = function(player)
+                player.daily_crafted_items = {}
+                player:ListenForEvent("builditem", function(inst, data)
+                    if data and data.item then
+                        if not table.contains(player.daily_crafted_items, data.item.prefab) then
+                            table.insert(player.daily_crafted_items, data.item.prefab)
+                        end
+                    end
+                end)
+                player:ListenForEvent("buildstructure", function(inst, data)
+                    if data and data.item then
+                        if not table.contains(player.daily_crafted_items, data.item.prefab) then
+                            table.insert(player.daily_crafted_items, data.item.prefab)
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                -- 给予工匠奖励
+                player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                player.components.inventory:GiveItem(SpawnPrefab("boards"))
+                player.components.inventory:GiveItem(SpawnPrefab("cutstone"))
+                
+                -- 临时提升制作效率
+                if player.components.builder then
+                    local old_ingredientmod = player.components.builder.ingredientmod
+                    player.components.builder.ingredientmod = 0.75 -- 减少25%材料消耗
+                    player:DoTaskInTime(480, function() -- 8分钟后恢复
+                        if player.components.builder then
+                            player.components.builder.ingredientmod = old_ingredientmod
+                        end
+                    end)
+                end
+            end,
+            reward_description = "2个金块、1个木板、1个石砖，以及8分钟的制作材料减少(25%)"
+        },
+        {
+            name = "资源收集者",
+            description = "在一天内收集50个基础资源(树枝/草/石头/木头)",
+            check = function(player)
+                local count = 0
+                if player.daily_resources_collected then
+                    for resource, amount in pairs(player.daily_resources_collected) do
+                        count = count + amount
+                    end
+                end
+                return count >= 50
+            end,
+            start = function(player)
+                player.daily_resources_collected = {
+                    twigs = 0,
+                    cutgrass = 0,
+                    rocks = 0,
+                    log = 0
+                }
+                player:ListenForEvent("picksomething", function(inst, data)
+                    if data and data.object and data.object.components.pickable then
+                        local product = data.object.components.pickable.product
+                        if player.daily_resources_collected[product] ~= nil then
+                            player.daily_resources_collected[product] = player.daily_resources_collected[product] + 1
+                        end
+                    end
+                end)
+                player:ListenForEvent("finishedwork", function(inst, data)
+                    if data and data.target then
+                        if data.target.prefab == "rock1" or data.target.prefab == "rock2" then
+                            player.daily_resources_collected.rocks = player.daily_resources_collected.rocks + 2
+                        elseif data.target:HasTag("tree") then
+                            player.daily_resources_collected.log = player.daily_resources_collected.log + 1
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                -- 给予资源收集者奖励
+                player.components.inventory:GiveItem(SpawnPrefab("backpack"))
+                
+                -- 临时提升采集速度
+                if player.components.workmultiplier then
+                    player.components.workmultiplier:AddMultiplier(ACTIONS.CHOP, 1.5, 300)
+                    player.components.workmultiplier:AddMultiplier(ACTIONS.MINE, 1.5, 300)
+                    player.components.workmultiplier:AddMultiplier(ACTIONS.HAMMER, 1.5, 300)
+                end
+            end,
+            reward_description = "1个背包，以及5分钟的采集速度提升(+50%)"
+        },
+        {
+            name = "探险家",
+            description = "在一天内探索10个新的地图区域",
+            check = function(player)
+                return player.daily_areas_discovered and player.daily_areas_discovered >= 10
+            end,
+            start = function(player)
+                player.daily_areas_discovered = 0
+                player:ListenForEvent("discoveredarea", function(inst, area)
+                    player.daily_areas_discovered = (player.daily_areas_discovered or 0) + 1
+                end)
+            end,
+            reward = function(player)
+                -- 给予探险家奖励
+                player.components.inventory:GiveItem(SpawnPrefab("compass"))
+                player.components.inventory:GiveItem(SpawnPrefab("wormlight"))
+                
+                -- 临时提升移动速度
+                player.components.locomotor:SetExternalSpeedMultiplier(player, "explorer_bonus", 1.4)
+                player:DoTaskInTime(360, function() -- 6分钟后恢复
+                    player.components.locomotor:RemoveExternalSpeedMultiplier(player, "explorer_bonus")
+                end)
+            end,
+            reward_description = "1个指南针、1个发光浆果，以及6分钟的移动速度提升(+40%)"
+        },
+        {
+            name = "钓鱼大师",
+            description = "在一天内钓上5条鱼",
+            check = function(player)
+                return player.daily_fish_caught and player.daily_fish_caught >= 5
+            end,
+            start = function(player)
+                player.daily_fish_caught = 0
+                player:ListenForEvent("fishingcollect", function(inst, data)
+                    player.daily_fish_caught = (player.daily_fish_caught or 0) + 1
+                end)
+            end,
+            reward = function(player)
+                -- 给予钓鱼大师奖励
+                player.components.inventory:GiveItem(SpawnPrefab("fishmeat"))
+                player.components.inventory:GiveItem(SpawnPrefab("fishmeat"))
+                player.components.inventory:GiveItem(SpawnPrefab("fishmeat"))
+                
+                -- 临时提升钓鱼效率
+                if player.components.fishingrod then
+                    local old_lure_effectiveness = player.components.fishingrod.lure_effectiveness
+                    player.components.fishingrod.lure_effectiveness = 2.0 -- 双倍钓鱼效率
+                    player:DoTaskInTime(480, function() -- 8分钟后恢复
+                        if player.components.fishingrod then
+                            player.components.fishingrod.lure_effectiveness = old_lure_effectiveness
+                        end
+                    end)
+                end
+            end,
+            reward_description = "3个鱼肉，以及8分钟的钓鱼效率提升(+100%)"
+        },
+        {
+            name = "家园设计师",
+            description = "在一天内收集5种不同的墙体材料",
+            check = function(player)
+                if not player.components.inventory then return false end
+                
+                local wall_types = {
+                    "fence_item",       -- 木栅栏
+                    "fence_gate_item",  -- 木门
+                    "wall_hay_item",    -- 草墙
+                    "wall_wood_item",   -- 木墙
+                    "wall_stone_item",  -- 石墙
+                    "wall_ruins_item",  -- 废料墙
+                    "wall_moonrock_item" -- 月岩墙
+                }
+                
+                local found_count = 0
+                for _, wall_type in ipairs(wall_types) do
+                    if player.components.inventory:FindItem(function(item) return item.prefab == wall_type end) then
+                        found_count = found_count + 1
+                    end
+                end
+                
+                return found_count >= 5
+            end,
+            reward = function(player)
+                -- 给予家园设计师奖励
+                player.components.inventory:GiveItem(SpawnPrefab("wall_stone_item"))
+                player.components.inventory:GiveItem(SpawnPrefab("wall_stone_item"))
+                player.components.inventory:GiveItem(SpawnPrefab("wall_stone_item"))
+                player.components.inventory:GiveItem(SpawnPrefab("wall_stone_item"))
+                player.components.inventory:GiveItem(SpawnPrefab("wall_stone_item"))
+                
+                -- 临时提升建造速度
+                if player.components.builder then
+                    local old_buildbonus = player.components.builder.buildbonus or 1
+                    player.components.builder.buildbonus = 2 -- 双倍建造速度
+                    player:DoTaskInTime(360, function() -- 6分钟后恢复
+                        if player.components.builder then
+                            player.components.builder.buildbonus = old_buildbonus
+                        end
+                    end)
+                end
+            end,
+            reward_description = "5个石墙，以及6分钟的建造速度提升(+100%)"
+        },
+        {
+            name = "室内装饰师",
+            description = "在一天内收集3种不同的家具物品",
+            check = function(player)
+                if not player.components.inventory then return false end
+                
+                local furniture_types = {
+                    "homesign",        -- 木牌
+                    "treasurechest",   -- 箱子
+                    "dragonflychest",  -- 龙鳞箱
+                    "icebox",          -- 冰箱
+                    "researchlab",     -- 科学机器
+                    "researchlab2",    -- 炼金引擎
+                    "researchlab3",    -- 暗影操控器
+                    "researchlab4",    -- 灵子分解器
+                    "cartographydesk", -- 制图桌
+                    "birdcage",        -- 鸟笼
+                    "pottedfern",      -- 盆栽蕨类
+                    "endtable",        -- 茶几
+                    "dragonflyfurnace" -- 龙鳞火炉
+                }
+                
+                local found_count = 0
+                for _, furniture_type in ipairs(furniture_types) do
+                    if player.components.inventory:FindItem(function(item) return item.prefab == furniture_type end) then
+                        found_count = found_count + 1
+                    end
+                end
+                
+                return found_count >= 3
+            end,
+            reward = function(player)
+                -- 给予室内装饰师奖励
+                player.components.inventory:GiveItem(SpawnPrefab("pottedfern"))
+                player.components.inventory:GiveItem(SpawnPrefab("homesign_item"))
+                
+                -- 临时提升精神恢复
+                if player.components.sanity then
+                    local old_modifier = player.components.sanity.neg_aura_mult
+                    player.components.sanity.neg_aura_mult = 0.5 -- 减少50%负面精神光环
+                    player:DoTaskInTime(480, function() -- 8分钟后恢复
+                        if player.components.sanity then
+                            player.components.sanity.neg_aura_mult = old_modifier
+                        end
+                    end)
+                end
+            end,
+            reward_description = "1个盆栽蕨类、1个木牌，以及8分钟的负面精神光环减少(50%)"
+        },
+        {
+            name = "地板铺设师",
+            description = "在一天内收集20块地板材料",
+            check = function(player)
+                if not player.components.inventory then return false end
+                
+                local floor_types = {
+                    "turf_road",        -- 卵石路
+                    "turf_rocky",       -- 岩石地皮
+                    "turf_forest",      -- 森林地皮
+                    "turf_grass",       -- 草地地皮
+                    "turf_savanna",     -- 热带草原地皮
+                    "turf_dirt",        -- 泥土地皮
+                    "turf_woodfloor",   -- 木地板
+                    "turf_carpetfloor", -- 地毯地板
+                    "turf_checkerfloor",-- 棋盘地板
+                    "turf_cave",        -- 洞穴地皮
+                    "turf_fungus",      -- 菌类地皮
+                    "turf_fungus_red",  -- 红色菌类地皮
+                    "turf_fungus_green" -- 绿色菌类地皮
+                }
+                
+                local total_count = 0
+                for _, floor_type in ipairs(floor_types) do
+                    local count = player.components.inventory:CountItems(function(item) return item.prefab == floor_type end)
+                    total_count = total_count + count
+                end
+                
+                return total_count >= 20
+            end,
+            reward = function(player)
+                -- 给予地板铺设师奖励
+                player.components.inventory:GiveItem(SpawnPrefab("turf_carpetfloor"))
+                player.components.inventory:GiveItem(SpawnPrefab("turf_carpetfloor"))
+                player.components.inventory:GiveItem(SpawnPrefab("turf_carpetfloor"))
+                player.components.inventory:GiveItem(SpawnPrefab("turf_carpetfloor"))
+                player.components.inventory:GiveItem(SpawnPrefab("turf_carpetfloor"))
+                
+                -- 临时提升移动速度（在基地内）
+                player.components.locomotor:SetExternalSpeedMultiplier(player, "floor_bonus", 1.3)
+                player:DoTaskInTime(600, function() -- 10分钟后恢复
+                    player.components.locomotor:RemoveExternalSpeedMultiplier(player, "floor_bonus")
+                end)
+            end,
+            reward_description = "5块地毯地板，以及10分钟的移动速度提升(+30%)"
+        },
+        {
+            name = "灯光设计师",
+            description = "在一天内收集3种不同的照明物品",
+            check = function(player)
+                if not player.components.inventory then return false end
+                
+                local light_types = {
+                    "torch",           -- 火把
+                    "campfire",        -- 营火
+                    "firepit",         -- 火坑
+                    "lantern",         -- 提灯
+                    "minerhat",        -- 矿工帽
+                    "molehat",         -- 鼹鼠帽
+                    "nightlight",      -- 暗夜照明灯
+                    "mushroom_light",  -- 蘑菇灯
+                    "mushroom_light2", -- 蘑菇灯（中）
+                    "mushroom_light3"  -- 蘑菇灯（大）
+                }
+                
+                local found_count = 0
+                for _, light_type in ipairs(light_types) do
+                    if player.components.inventory:FindItem(function(item) return item.prefab == light_type end) then
+                        found_count = found_count + 1
+                    end
+                end
+                
+                return found_count >= 3
+            end,
+            reward = function(player)
+                -- 给予灯光设计师奖励
+                player.components.inventory:GiveItem(SpawnPrefab("lantern"))
+                
+                -- 临时提升夜视能力
+                player.components.playervision:ForceNightVision(true)
+                player:DoTaskInTime(360, function() -- 6分钟后恢复
+                    player.components.playervision:ForceNightVision(false)
+                end)
+            end,
+            reward_description = "1个提灯，以及6分钟的夜视能力"
+        },
+        {
+            name = "救援专家",
+            description = "在一天内复活3名队友",
+            check = function(player)
+                return player.daily_revives and player.daily_revives >= 3
+            end,
+            start = function(player)
+                player.daily_revives = 0
+                player:ListenForEvent("respawnfromghost", function(inst, data)
+                    if data and data.source and data.source == player then
+                        player.daily_revives = (player.daily_revives or 0) + 1
+                    end
+                end)
+            end,
+            reward = function(player)
+                -- 给予救援专家奖励
+                player.components.inventory:GiveItem(SpawnPrefab("amulet"))
+                
+                -- 临时提升生命上限
+                if player.components.health then
+                    local old_max = player.components.health.maxhealth
+                    player.components.health:SetMaxHealth(old_max * 1.25)
+                    player:DoTaskInTime(480, function() -- 8分钟后恢复
+                        if player.components.health then
+                            player.components.health:SetMaxHealth(old_max)
+                        end
+                    end)
+                end
+            end,
+            reward_description = "1个生命护符，以及8分钟的生命上限提升(+25%)"
+        },
+        {
+            name = "慷慨的厨师",
+            description = "在一天内给其他玩家提供5次食物",
+            check = function(player)
+                return player.daily_food_given and player.daily_food_given >= 5
+            end,
+            start = function(player)
+                player.daily_food_given = 0
+                player:ListenForEvent("trade", function(inst, data)
+                    if data and data.target and data.target:HasTag("player") and data.target ~= player then
+                        if data.item and data.item.components.edible then
+                            player.daily_food_given = (player.daily_food_given or 0) + 1
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                -- 给予慷慨的厨师奖励
+                player.components.inventory:GiveItem(SpawnPrefab("cookbook"))
+                player.components.inventory:GiveItem(SpawnPrefab("butter"))
+                
+                -- 临时提升烹饪效率
+                if player.components.cooker then
+                    local old_cooktime = player.components.cooker.cooktime
+                    player.components.cooker.cooktime = old_cooktime * 0.5 -- 减少50%烹饪时间
+                    player:DoTaskInTime(480, function() -- 8分钟后恢复
+                        if player.components.cooker then
+                            player.components.cooker.cooktime = old_cooktime
+                        end
+                    end)
+                end
+            end,
+            reward_description = "1本食谱、1块黄油，以及8分钟的烹饪时间减少(50%)"
+        },
+        {
+            name = "建筑大师",
+            description = "在一天内建造3种不同的建筑物",
+            check = function(player)
+                return player.daily_structures_built and #player.daily_structures_built >= 3
+            end,
+            start = function(player)
+                player.daily_structures_built = {}
+                player:ListenForEvent("buildstructure", function(inst, data)
+                    if data and data.item then
+                        if not table.contains(player.daily_structures_built, data.item.prefab) then
+                            table.insert(player.daily_structures_built, data.item.prefab)
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                -- 给予建筑大师奖励
+                player.components.inventory:GiveItem(SpawnPrefab("boards"))
+                player.components.inventory:GiveItem(SpawnPrefab("boards"))
+                player.components.inventory:GiveItem(SpawnPrefab("cutstone"))
+                player.components.inventory:GiveItem(SpawnPrefab("cutstone"))
+                
+                -- 临时提升建造速度
+                if player.components.builder then
+                    local old_buildbonus = player.components.builder.buildbonus or 1
+                    player.components.builder.buildbonus = 2 -- 双倍建造速度
+                    player:DoTaskInTime(360, function() -- 6分钟后恢复
+                        if player.components.builder then
+                            player.components.builder.buildbonus = old_buildbonus
+                        end
+                    end)
+                end
+            end,
+            reward_description = "2个木板、2个石砖，以及6分钟的建造速度提升(+100%)"
+        },
+        {
+            name = "团队治疗师",
+            description = "在一天内治疗队友总计100点生命值",
+            check = function(player)
+                return player.daily_healing_done and player.daily_healing_done >= 100
+            end,
+            start = function(player)
+                player.daily_healing_done = 0
+                player:ListenForEvent("healed", function(inst, data)
+                    if data and data.target and data.target:HasTag("player") and data.target ~= player and data.amount then
+                        player.daily_healing_done = (player.daily_healing_done or 0) + data.amount
+                    end
+                end)
+            end,
+            reward = function(player)
+                -- 给予团队治疗师奖励
+                player.components.inventory:GiveItem(SpawnPrefab("healingsalve"))
+                player.components.inventory:GiveItem(SpawnPrefab("healingsalve"))
+                player.components.inventory:GiveItem(SpawnPrefab("lifeinjector"))
+                
+                -- 临时提升治疗效果
+                player:AddTag("healer_bonus")
+                player:DoTaskInTime(480, function() -- 8分钟后恢复
+                    player:RemoveTag("healer_bonus")
+                end)
+                
+                -- 添加治疗效果修改器
+                local old_DoHeal = ACTIONS.HEAL.fn
+                ACTIONS.HEAL.fn = function(act)
+                    local result = old_DoHeal(act)
+                    if act.doer and act.doer:HasTag("healer_bonus") and result and act.target ~= act.doer then
+                        if act.target.components.health then
+                            act.target.components.health:DoDelta(20) -- 额外治疗20点
+                        end
+                    end
+                    return result
+                end
+            end,
+            reward_description = "2个治疗药膏、1个生命注射器，以及8分钟的治疗效果提升(+20点)"
         }
     }
     

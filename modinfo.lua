@@ -1,7 +1,7 @@
 name = "每日任务系统"
 description = "为玩家提供每日任务，完成后可获得奖励"
 author = "Va6gn"
-version = "1.184"
+version = "1.188"
 
 forumthread = ""
 
