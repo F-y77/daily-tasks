@@ -3282,9 +3282,9 @@ local DailyTasks = Class(function(self, inst)
         },
         {
             name = "饥饿艺术家",
-            description = "在饥饿值低于10%的情况下生存2小时",
+            description = "在饥饿值低于10%的情况下生存5分钟",
             check = function(player)
-                return player.daily_hunger_time and player.daily_hunger_time >= 120 -- 2小时 = 120分钟
+                return player.daily_hunger_time and player.daily_hunger_time >= 5 -- 2小时 = 120分钟
             end,
             start = function(player)
                 player.daily_hunger_time = 0
@@ -3299,7 +3299,7 @@ local DailyTasks = Class(function(self, inst)
                         -- 每30分钟提示一次
                         if player.daily_hunger_time % 30 == 0 and player.components.talker then
                             local minutes = player.daily_hunger_time
-                            player.components.talker:Say("饥饿艺术家进度: " .. minutes .. "/120分钟")
+                            player.components.talker:Say("饥饿艺术家进度: " .. minutes .. "/5分钟")
                         end
                     else
                         player.hunger_challenge_active = false
@@ -3315,13 +3315,9 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("dragonpie"))
                     player.components.inventory:GiveItem(SpawnPrefab("dragonpie"))
                     
-                    -- 永久提升饥饿上限
-                    if player.components.hunger then
-                        player.components.hunger:SetMax(player.components.hunger.max + 50)
-                    end
                 end
             end,
-            reward_description = "3个培根煎蛋、2个龙派，以及永久增加50点最大饥饿值",
+            reward_description = "3个培根煎蛋、2个龙派",
             difficulty = "hard"
         },
         {
@@ -3452,11 +3448,9 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("slurtleslime"))
                     player.components.inventory:GiveItem(SpawnPrefab("slurtleslime"))
                     
-                    -- 永久提升夜视能力
-                    player:AddTag("nightvision")
                 end
             end,
-            reward_description = "1个提灯、1个矿工帽、3个鼻涕虫粘液，以及永久夜视能力",
+            reward_description = "1个提灯、1个矿工帽、3个鼻涕虫粘液",
             difficulty = "hard"
         },
         {
@@ -4126,26 +4120,66 @@ function DailyTasks:Init()
 end
 
 function DailyTasks:OnUpdate()
+    -- 获取当前天数
     local current_day = TheWorld.state.cycles
     
-    -- 检查是否是新的一天
-    if self.last_day ~= current_day then
-        self.last_day = current_day
-        self:NewDay()
+    -- 如果是新的一天，重置任务
+    if self.last_day ~= nil and current_day > self.last_day then
+        -- 天数变化，重置任务
+        self:ResetTasks()
     end
     
+    -- 更新last_day
+    self.last_day = current_day
+    
     -- 检查任务是否完成
-    if self.config.TASK_COUNT > 1 and #self.current_tasks > 0 then
+    if self.config.TASK_COUNT > 1 then
         -- 多任务模式
         for i, task in ipairs(self.current_tasks) do
-            if not self.tasks_completed[i] and task.check(self.inst) then
-                self:CompleteTask(i)
+            if not self.tasks_completed[i] then
+                -- 使用pcall来捕获可能的错误
+                local success, result = pcall(function()
+                    return task.check(self.inst)
+                end)
+                
+                if success and result then
+                    -- 任务完成
+                    self.tasks_completed[i] = true
+                    
+                    -- 给予奖励
+                    if task.reward then
+                        task.reward(self.inst)
+                    end
+                    
+                    -- 通知玩家
+                    if self.config.SHOW_NOTIFICATIONS and self.inst.components.talker then
+                        local task_name = type(task.name) == "function" and task.name() or task.name
+                        self.inst.components.talker:Say(DAILYTASKS.Translate("任务完成: " .. task_name))
+                    end
+                end
             end
         end
     elseif self.current_task and not self.task_completed then
         -- 单任务模式
-        if self.current_task.check(self.inst) then
-            self:CompleteTask()
+        -- 使用pcall来捕获可能的错误
+        local success, result = pcall(function()
+            return self.current_task.check(self.inst)
+        end)
+        
+        if success and result then
+            -- 任务完成
+            self.task_completed = true
+            
+            -- 给予奖励
+            if self.current_task.reward then
+                self.current_task.reward(self.inst)
+            end
+            
+            -- 通知玩家
+            if self.config.SHOW_NOTIFICATIONS and self.inst.components.talker then
+                local task_name = type(self.current_task.name) == "function" and self.current_task.name() or self.current_task.name
+                self.inst.components.talker:Say(DAILYTASKS.Translate("任务完成: " .. task_name))
+            end
         end
     end
 end
