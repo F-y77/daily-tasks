@@ -1,7 +1,7 @@
 name = "每日任务系统"
 description = "为玩家提供每日任务，完成后可获得奖励"
 author = "Va6gn"
-version = "1.188"
+version = "1.2.0"
 
 forumthread = ""
 
@@ -40,9 +40,11 @@ configuration_options = {
         options = {
             {description = "1个任务", data = 1},
             {description = "2个任务", data = 2},
-            {description = "3个任务", data = 3,hover = "默认超大份"}
+            {description = "3个任务", data = 3, hover = "过去的默认值"},
+            {description = "4个任务", data = 4},
+            {description = "5个任务", data = 5, hover = "默认超多任务"}
         },
-        default = 3
+        default = 5
     },
     {
         name = "TASK_DIFFICULTY",
@@ -59,7 +61,7 @@ configuration_options = {
         label = "奖励倍数",
         options = {
             {description = "0.5倍", data = 0.5},
-            {description = "1倍", data = 1},
+            {description = "1倍", data = 1, hover = "默认值"},
             {description = "1.5倍", data = 1.5},
             {description = "2倍", data = 2},
             {description = "2.5倍", data = 2.5},
@@ -82,7 +84,7 @@ configuration_options = {
     },
     {
         name = "CHECK_TASK_KEY",
-        label = "查看任务快捷键",
+        label = "查看任务快捷键，可以关闭",
         options = {
             {description = "R键", data = "KEY_R", hover = "默认值"},
             {description = "T键", data = "KEY_T"},
@@ -93,22 +95,24 @@ configuration_options = {
             {description = "V键", data = "KEY_V"},
             {description = "B键", data = "KEY_B"},
             {description = "N键", data = "KEY_N"},
-            {description = "M键", data = "KEY_M"}
+            {description = "M键", data = "KEY_M"},
+            {description = "关闭", data = "DISABLED", hover = "关闭快捷键"}
         },
         default = "KEY_R"
     },
     {
         name = "CHECK_PROGRESS_KEY",
-        label = "查看进度快捷键",
+        label = "查看进度快捷键，可以关闭",
         options = {
             {description = "F键", data = "KEY_F"},
             {description = "Y键", data = "KEY_Y"},
             {description = "R键", data = "KEY_R"},
             {description = "C键", data = "KEY_C"},
-            {description = "V键", data = "KEY_V"},
+            {description = "V键", data = "KEY_V", hover = "默认值"},
             {description = "B键", data = "KEY_B"},
             {description = "N键", data = "KEY_N"},
-            {description = "M键", data = "KEY_M"}
+            {description = "M键", data = "KEY_M"},
+            {description = "关闭", data = "DISABLED", hover = "关闭快捷键"}
         },
         default = "KEY_V"
     },

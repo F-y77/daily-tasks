@@ -1,6 +1,10 @@
 -- 首先定义全局变量
 GLOBAL.DAILYTASKS = {}
 
+-- 设置元表以简化全局变量访问
+local env = env
+GLOBAL.setmetatable(env, {__index = function(t, k) return GLOBAL.rawget(GLOBAL, k) end})
+
 -- 获取语言设置
 local LANGUAGE = GetModConfigData("LANGUAGE") or "zh"
 
@@ -380,15 +384,17 @@ end)
 local function SetupKeyHandlers(inst)
     -- 检查任务键和进度键保持不变
     local check_task_key = GLOBAL.DAILYTASKS.CONFIG.CHECK_TASK_KEY or "KEY_R"
-    GLOBAL.TheInput:AddKeyDownHandler(GLOBAL[check_task_key], function()
-        if GLOBAL.ThePlayer then
+    GLOBAL.TheInput:AddKeyDownHandler(GLOBAL._G[check_task_key], function()
+        if ThePlayer then
+            -- 使用RPC方式，这样更可靠
             SendModRPCToServer(MOD_RPC["DailyTasks"]["CheckTasks"])
         end
     end)
     
     local check_progress_key = GLOBAL.DAILYTASKS.CONFIG.CHECK_PROGRESS_KEY or "KEY_F"
-    GLOBAL.TheInput:AddKeyDownHandler(GLOBAL[check_progress_key], function()
-        if GLOBAL.ThePlayer then
+    GLOBAL.TheInput:AddKeyDownHandler(GLOBAL._G[check_progress_key], function()
+        if ThePlayer then
+            -- 使用RPC方式
             SendModRPCToServer(MOD_RPC["DailyTasks"]["CheckProgress"])
         end
     end)
@@ -721,10 +727,23 @@ end)]]
 
 -- 注册新食物类型（用于Among Us任务）
 AddPrefabPostInit("monstertartare", function(inst)
-    inst.components.edible:SetOnEatenFn(function(inst, eater)
-        eater.components.health:DoDelta(-20)
-        eater:PushEvent("death", {cause = "poisoned_food", afflicter = inst.components.inventoryitem.owner})
-    end)
+    if inst.components and inst.components.edible then
+        local old_oneatenfn = inst.components.edible.oneatenfn
+        inst.components.edible:SetOnEatenFn(function(inst, eater)
+            -- 调用原始函数
+            if old_oneatenfn then
+                old_oneatenfn(inst, eater)
+            end
+            
+            -- 触发全局事件
+            if inst.components.inventoryitem and inst.components.inventoryitem.owner then
+                local feeder = inst.components.inventoryitem.owner
+                if feeder and feeder:HasTag("player") and eater and eater:HasTag("player") then
+                    feeder:PushEvent("feedplayer", {food = inst, target = eater})
+                end
+            end
+        end)
+    end
 end)
 
 -- 添加红色蘑菇帽
@@ -742,4 +761,38 @@ AddPlayerPostInit(function(inst)
             inst.among_us_kills = nil
         end
     end)
+end)
+
+-- 修改快捷键绑定部分
+local function BindKeys()
+    if not TheInput then
+        return
+    end
+    
+    -- 检查是否禁用了查看任务快捷键
+    if CHECK_TASK_KEY ~= "DISABLED" then
+        TheInput:AddKeyDownHandler(GLOBAL._G[CHECK_TASK_KEY], function()
+            if ThePlayer then
+                -- 使用RPC方式，这样更可靠
+                SendModRPCToServer(MOD_RPC["DailyTasks"]["CheckTasks"])
+            end
+        end)
+    end
+    
+    -- 检查是否禁用了查看进度快捷键
+    if CHECK_PROGRESS_KEY ~= "DISABLED" then
+        TheInput:AddKeyDownHandler(GLOBAL._G[CHECK_PROGRESS_KEY], function()
+            if ThePlayer then
+                -- 使用RPC方式
+                SendModRPCToServer(MOD_RPC["DailyTasks"]["CheckProgress"])
+            end
+        end)
+    end
+end
+
+-- 在适当的地方调用BindKeys函数
+AddSimPostInit(function()
+    if GLOBAL.TheInput then
+        BindKeys()
+    end
 end) 

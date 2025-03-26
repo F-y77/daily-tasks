@@ -21,6 +21,56 @@ local DailyTasks = Class(function(self, inst)
     self.inst.daily_sanity_restored = 0
     self.inst.daily_hunger_restored = 0
     
+    -- 制作物品任务生成函数
+    local function CreateCraftingTask(name, prefab, count, reward_fn, reward_desc, difficulty)
+        return {
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft " .. name 
+                    or "制作" .. name .. "任务"
+            end,
+            description = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"
+                    and "Craft " .. count .. " " .. name
+                    or "制作" .. count .. "个" .. name 
+            end,
+            check = function(player)
+                if not player.components.inventory then return false end
+                
+                local found_count = 0
+                -- 检查主背包
+                local items = player.components.inventory:FindItems(function(item)
+                    return item.prefab == prefab
+                end)
+                found_count = #items
+                
+                -- 检查装备栏
+                if player.components.inventory.equipslots then
+                    for _, item in pairs(player.components.inventory.equipslots) do
+                        if item.prefab == prefab then
+                            found_count = found_count + 1
+                        end
+                    end
+                end
+                
+                -- 检查背包等容器
+                for container_inst, _ in pairs(player.components.inventory.opencontainers) do
+                    if container_inst and container_inst.components and container_inst.components.container then
+                        local container_items = container_inst.components.container:FindItems(function(item)
+                            return item.prefab == prefab
+                        end)
+                        found_count = found_count + (#container_items or 0)
+                    end
+                end
+                
+                return found_count >= count
+            end,
+            reward = reward_fn,
+            reward_description = reward_desc,
+            difficulty = difficulty or "medium"
+        }
+    end
+    
     -- 任务列表
     self.tasks = {
         -- 采集任务
@@ -2060,43 +2110,57 @@ local DailyTasks = Class(function(self, inst)
         },
         {
             name = "Among Us 厨房危机",
-            description = "给队友喂食扣血食物",
+            description = "给队友喂食怪物千层饼",
             check = function(player)
                 return player.among_us_feeds and player.among_us_feeds >= 1
             end,
             start = function(player)
-                player:ListenForEvent("oneat", function(inst, data)
-                    if data and data.food and data.feeder == player then
-                        if data.food.prefab == "monstertartare" and data.eater ~= player then
-                            player.among_us_feeds = (player.among_us_feeds or 0) + 1
-                        end
+                player.among_us_feeds = 0
+                -- 使用全局事件监听，而不是依赖于特定实体的事件
+                player:ListenForEvent("feedplayer", function(inst, data)
+                    if data and data.food and data.food.prefab == "monstertartare" and data.target ~= player then
+                        player.among_us_feeds = (player.among_us_feeds or 0) + 1
                     end
                 end)
             end,
             reward = function(player)
-                player.components.inventory:GiveItem(SpawnPrefab("krampus_sack"))
-                player.components.sanity:SetMax(50)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("krampus_sack"))
+                end
+                --if player.components.sanity then
+                --    player.components.sanity:SetMax(player.components.sanity.max + 50)
+                --end
             end,
-            reward_description = "坎普斯背包+50理智上限",
+            reward_description = "坎普斯背包",
             special = true
         },
         {
             name = "社恐波奇酱",
-            description = "保持独处一整天",
+            description = "保持独处4小时",
             check = function(player)
-                return player.social_anxiety_days and player.social_anxiety_days >= 1
+                return player.social_anxiety_time and player.social_anxiety_time >= 240 -- 4小时 = 240分钟
             end,
             start = function(player)
-                player.social_anxiety_days = 0
-                player:DoPeriodicTask(10, function() 
-                    local x,y,z = player.Transform:GetWorldPosition()
-                    local ents = TheSim:FindEntities(x,y,z, 5, {"_combat","player"})
+                player.social_anxiety_time = 0
+                player.social_anxiety_task = player:DoPeriodicTask(60, function() -- 每分钟检查一次
+                    local x, y, z = player.Transform:GetWorldPosition()
+                    local ents = TheSim:FindEntities(x, y, z, 5, {"_combat", "player"})
                     -- 排除自己后判断是否有其他实体
                     if #ents > 1 then 
-                        player.social_anxiety_days = 0
+                        -- 如果有其他实体，重置计时
+                        player.social_anxiety_time = 0
+                        if player.components.talker then
+                            player.components.talker:Say("社恐挑战失败！需要重新开始。")
+                        end
                     else
-                        -- 每10秒增加1/240天（现实1天=游戏8分钟）
-                        player.social_anxiety_days = (player.social_anxiety_days or 0) + (10/480)
+                        -- 每分钟增加1分钟
+                        player.social_anxiety_time = (player.social_anxiety_time or 0) + 1
+                        
+                        -- 每小时提示一次
+                        if player.social_anxiety_time % 60 == 0 and player.components.talker then
+                            local hours = math.floor(player.social_anxiety_time / 60)
+                            player.components.talker:Say("社恐进度: " .. hours .. "/4小时")
+                        end
                     end
                 end)
             end,
@@ -2801,7 +2865,1229 @@ local DailyTasks = Class(function(self, inst)
                 end
             end,
             reward_description = "2个治疗药膏、1个生命注射器，以及8分钟的治疗效果提升(+20点)"
-        }
+        },
+        {
+            name = "简单采集",
+            description = "采集5个树枝",
+            check = function(player)
+                if not player.components.inventory then return false end
+                local count = player.components.inventory:CountItems(function(item) return item.prefab == "twigs" end)
+                return count >= 5
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                end
+            end,
+            reward_description = "2个金块"
+        },
+        {
+            name = "简单砍树",
+            description = "砍倒3棵树",
+            check = function(player)
+                return player.daily_trees_chopped and player.daily_trees_chopped >= 3
+            end,
+            start = function(player)
+                player.daily_trees_chopped = 0
+                player:ListenForEvent("working", function(inst, data)
+                    if data and data.target and 
+                       (data.target.prefab == "evergreen" or 
+                        data.target.prefab == "deciduoustree" or 
+                        data.target.prefab == "mushtree_tall") then
+                        if data.target:HasTag("stump") then
+                            player.daily_trees_chopped = (player.daily_trees_chopped or 0) + 1
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("log"))
+                    player.components.inventory:GiveItem(SpawnPrefab("log"))
+                    player.components.inventory:GiveItem(SpawnPrefab("log"))
+                end
+            end,
+            reward_description = "3个木头"
+        },
+        {
+            name = "简单生存",
+            description = "存活1个游戏日",
+            check = function(player)
+                return player.daily_days_survived and player.daily_days_survived >= 1
+            end,
+            start = function(player)
+                player.daily_days_survived = 0
+                player:ListenForEvent("ms_newday", function(inst)
+                    player.daily_days_survived = (player.daily_days_survived or 0) + 1
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("meat"))
+                    player.components.inventory:GiveItem(SpawnPrefab("berries"))
+                    player.components.inventory:GiveItem(SpawnPrefab("berries"))
+                end
+            end,
+            reward_description = "1个肉和2个浆果"
+        },
+        {
+            name = "简单烹饪",
+            description = "烹饪1个食物",
+            check = function(player)
+                return player.daily_foods_cooked and player.daily_foods_cooked >= 1
+            end,
+            start = function(player)
+                player.daily_foods_cooked = 0
+                player:ListenForEvent("foodcooked", function(inst, data)
+                    if data and data.food then
+                        player.daily_foods_cooked = (player.daily_foods_cooked or 0) + 1
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("meatballs"))
+                end
+            end,
+            reward_description = "1个肉丸"
+        },
+        {
+            name = "简单制作",
+            description = "制作1个工具",
+            check = function(player)
+                return player.daily_tools_crafted and player.daily_tools_crafted >= 1
+            end,
+            start = function(player)
+                player.daily_tools_crafted = 0
+                player:ListenForEvent("builditem", function(inst, data)
+                    if data and data.item and 
+                       (data.item:HasTag("tool") or 
+                        data.item.prefab == "axe" or 
+                        data.item.prefab == "pickaxe" or 
+                        data.item.prefab == "shovel" or 
+                        data.item.prefab == "hammer") then
+                        player.daily_tools_crafted = (player.daily_tools_crafted or 0) + 1
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("flint"))
+                    player.components.inventory:GiveItem(SpawnPrefab("flint"))
+                    player.components.inventory:GiveItem(SpawnPrefab("twigs"))
+                    player.components.inventory:GiveItem(SpawnPrefab("twigs"))
+                end
+            end,
+            reward_description = "2个燧石和2个树枝"
+        },
+        {
+            name = "舞王挑战",
+            description = "在一天内跳舞20次",
+            check = function(player)
+                return player.daily_dance_count and player.daily_dance_count >= 20
+            end,
+            start = function(player)
+                player.daily_dance_count = 0
+                player:ListenForEvent("dance", function(inst)
+                    player.daily_dance_count = (player.daily_dance_count or 0) + 1
+                    -- 每跳5次舞就提示一次
+                    if player.daily_dance_count % 5 == 0 and player.components.talker then
+                        player.components.talker:Say("舞王进度: " .. player.daily_dance_count .. "/20")
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予一顶高礼帽作为舞王的象征
+                    player.components.inventory:GiveItem(SpawnPrefab("tophat"))
+                    -- 临时提升移动速度
+                    player.components.locomotor:SetExternalSpeedMultiplier(player, "dance_bonus", 1.3)
+                    player:DoTaskInTime(240, function() -- 4分钟后恢复
+                        player.components.locomotor:RemoveExternalSpeedMultiplier(player, "dance_bonus")
+                    end)
+                end
+            end,
+            reward_description = "1个高礼帽，以及4分钟的移动速度提升(+30%)"
+        },
+        {
+            name = "疯狂自拍",
+            description = "在一天内对着10个不同的生物做鬼脸",
+            check = function(player)
+                return player.daily_taunt_targets and #player.daily_taunt_targets >= 10
+            end,
+            start = function(player)
+                player.daily_taunt_targets = {}
+                player:ListenForEvent("taunt", function(inst, data)
+                    if data and data.target and data.target.prefab then
+                        if not table.contains(player.daily_taunt_targets, data.target.prefab) then
+                            table.insert(player.daily_taunt_targets, data.target.prefab)
+                            if player.components.talker then
+                                player.components.talker:Say("自拍进度: " .. #player.daily_taunt_targets .. "/10")
+                            end
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予一个蜜蜂女王皇冠，因为你现在是"网红"了
+                    player.components.inventory:GiveItem(SpawnPrefab("beequeen_crown"))
+                end
+            end,
+            reward_description = "1个蜜蜂女王皇冠"
+        },
+        {
+            name = "裸奔挑战",
+            description = "不穿任何装备跑步10分钟",
+            check = function(player)
+                return player.daily_naked_running and player.daily_naked_running >= 600 -- 10分钟 = 600秒
+            end,
+            start = function(player)
+                player.daily_naked_running = 0
+                player.naked_running_task = player:DoPeriodicTask(1, function()
+                    -- 检查是否没有穿戴任何装备
+                    local is_naked = true
+                    for _, slot in pairs(EQUIPSLOTS) do
+                        if player.components.inventory:GetEquippedItem(slot) then
+                            is_naked = false
+                            break
+                        end
+                    end
+                    
+                    -- 检查是否在移动
+                    local is_moving = player.sg and (player.sg:HasStateTag("moving") or player.sg:HasStateTag("running"))
+                    
+                    if is_naked and is_moving then
+                        player.daily_naked_running = (player.daily_naked_running or 0) + 1
+                        
+                        -- 每分钟提示一次
+                        if player.daily_naked_running % 60 == 0 and player.components.talker then
+                            local minutes = math.floor(player.daily_naked_running / 60)
+                            player.components.talker:Say("裸奔进度: " .. minutes .. "/10分钟")
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予一套完整的装备作为奖励
+                    player.components.inventory:GiveItem(SpawnPrefab("armorwood"))
+                    player.components.inventory:GiveItem(SpawnPrefab("footballhat"))
+                    player.components.inventory:GiveItem(SpawnPrefab("backpack"))
+                end
+            end,
+            reward_description = "1个木甲、1个橄榄球头盔、1个背包"
+        },
+        {
+            name = "猪人派对",
+            description = "让5只猪人同时跟随你",
+            check = function(player)
+                local followers = 0
+                for k,v in pairs(player.components.leader.followers) do
+                    if k.prefab == "pigman" then
+                        followers = followers + 1
+                    end
+                end
+                return followers >= 5
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予猪皮和肉，因为...你懂的
+                    for i=1,5 do
+                        player.components.inventory:GiveItem(SpawnPrefab("pigskin"))
+                    end
+                    for i=1,3 do
+                        player.components.inventory:GiveItem(SpawnPrefab("meat"))
+                    end
+                end
+            end,
+            reward_description = "5个猪皮、3个肉"
+        },
+        {
+            name = "蜘蛛骑士",
+            description = "骑着蜘蛛皇后行走1分钟",
+            check = function(player)
+                return player.daily_spider_riding and player.daily_spider_riding >= 60 -- 1分钟 = 60秒
+            end,
+            start = function(player)
+                player.daily_spider_riding = 0
+                player.spider_riding_task = player:DoPeriodicTask(1, function()
+                    -- 检查是否骑在蜘蛛皇后上
+                    local is_riding_spider = player.components.rider and player.components.rider:IsRiding() and 
+                                             player.components.rider.mount and player.components.rider.mount.prefab == "spiderqueen"
+                    
+                    if is_riding_spider then
+                        player.daily_spider_riding = (player.daily_spider_riding or 0) + 1
+                        
+                        -- 每10秒提示一次
+                        if player.daily_spider_riding % 10 == 0 and player.components.talker then
+                            local seconds = player.daily_spider_riding
+                            player.components.talker:Say("蜘蛛骑行进度: " .. seconds .. "/60秒")
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予蜘蛛相关物品
+                    player.components.inventory:GiveItem(SpawnPrefab("spiderhat"))
+                    for i=1,10 do
+                        player.components.inventory:GiveItem(SpawnPrefab("silk"))
+                    end
+                end
+            end,
+            reward_description = "1个蜘蛛帽、10个蜘蛛丝"
+        },
+        {
+            name = "疯狂钓鱼佬",
+            description = "连续钓鱼15分钟不做其他事",
+            check = function(player)
+                return player.daily_fishing_streak and player.daily_fishing_streak >= 15 -- 15分钟
+            end,
+            start = function(player)
+                player.daily_fishing_streak = 0
+                player.fishing_streak_task = player:DoPeriodicTask(1, function()
+                    -- 检查是否在钓鱼
+                    local is_fishing = player.sg and player.sg:HasStateTag("fishing")
+                    
+                    if is_fishing then
+                        player.daily_fishing_streak = (player.daily_fishing_streak or 0) + (1/60) -- 每秒增加1/60分钟
+                        
+                        -- 每5分钟提示一次
+                        if math.floor(player.daily_fishing_streak) % 5 == 0 and 
+                           math.floor(player.daily_fishing_streak * 60) % 300 == 0 and 
+                           player.components.talker then
+                            player.components.talker:Say("钓鱼进度: " .. math.floor(player.daily_fishing_streak) .. "/15分钟")
+                        end
+                    else
+                        -- 如果不是在钓鱼，重置计时器
+                        player.daily_fishing_streak = 0
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予钓鱼相关物品和大量鱼
+                    player.components.inventory:GiveItem(SpawnPrefab("fishingrod"))
+                    for i=1,10 do
+                        player.components.inventory:GiveItem(SpawnPrefab("fishmeat"))
+                    end
+                end
+            end,
+            reward_description = "1个钓鱼竿、10个鱼肉",
+            difficulty = "medium"
+        },
+        {
+            name = "熊孩子",
+            description = "破坏10个蜘蛛网、兔子洞或蜜蜂窝",
+            check = function(player)
+                return player.daily_destroyed_homes and player.daily_destroyed_homes >= 10
+            end,
+            start = function(player)
+                player.daily_destroyed_homes = 0
+                player:ListenForEvent("working", function(inst, data)
+                    if data and data.target then
+                        if data.target.prefab == "spiderden" or 
+                           data.target.prefab == "rabbithole" or 
+                           data.target.prefab == "beehive" or
+                           data.target.prefab == "wasphive" then
+                            player.daily_destroyed_homes = (player.daily_destroyed_homes or 0) + 1
+                            
+                            if player.components.talker then
+                                player.components.talker:Say("熊孩子进度: " .. player.daily_destroyed_homes .. "/10")
+                            end
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予一个足球和一些糖果
+                    player.components.inventory:GiveItem(SpawnPrefab("footballhat"))
+                    for i=1,5 do
+                        player.components.inventory:GiveItem(SpawnPrefab("candy_tuft"))
+                    end
+                end
+            end,
+            reward_description = "1个橄榄球头盔、5个糖果"
+        },
+        {
+            name = "无敌挑战者",
+            description = "在一天内不受到任何伤害",
+            check = function(player)
+                return player.daily_no_damage_challenge and player.daily_no_damage_challenge
+            end,
+            start = function(player)
+                player.daily_no_damage_challenge = true
+                player:ListenForEvent("attacked", function(inst, data)
+                    if data and data.damage and data.damage > 0 then
+                        player.daily_no_damage_challenge = false
+                        if player.components.talker then
+                            player.components.talker:Say("无敌挑战失败！")
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予一个非常珍贵的物品
+                    player.components.inventory:GiveItem(SpawnPrefab("yellowstaff"))
+                    player.components.inventory:GiveItem(SpawnPrefab("armormarble"))
+                    -- 临时提升防御
+                    if player.components.health then
+                        player.components.health:SetAbsorptionAmount(0.75) -- 75%伤害吸收
+                        player:DoTaskInTime(300, function() -- 5分钟后恢复
+                            player.components.health:SetAbsorptionAmount(0)
+                        end)
+                    end
+                end
+            end,
+            reward_description = "唤星者魔杖、大理石甲，以及5分钟的75%伤害减免",
+            difficulty = "hard"
+        },
+        {
+            name = "极限生存",
+            description = "在一天内生命值低于10%的情况下生存10分钟",
+            check = function(player)
+                return player.daily_low_health_time and player.daily_low_health_time >= 600 -- 10分钟 = 600秒
+            end,
+            start = function(player)
+                player.daily_low_health_time = 0
+                player.low_health_task = player:DoPeriodicTask(1, function()
+                    if player.components.health and player.components.health:GetPercent() <= 0.1 and not player:HasTag("playerghost") then
+                        player.daily_low_health_time = (player.daily_low_health_time or 0) + 1
+                        
+                        -- 每分钟提示一次
+                        if player.daily_low_health_time % 60 == 0 and player.components.talker then
+                            local minutes = math.floor(player.daily_low_health_time / 60)
+                            player.components.talker:Say("极限生存进度: " .. minutes .. "/10分钟")
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("amulet"))
+                    player.components.inventory:GiveItem(SpawnPrefab("lifeinjector"))
+                    player.components.inventory:GiveItem(SpawnPrefab("lifeinjector"))
+                    -- 永久提升最大生命值
+                    if player.components.health then
+                        player.components.health:SetMaxHealth(player.components.health.maxhealth + 25)
+                    end
+                end
+            end,
+            reward_description = "1个生命护符、2个生命注射器，以及永久增加25点最大生命值",
+            difficulty = "hard"
+        },
+        {
+            name = "饥饿艺术家",
+            description = "在饥饿值低于10%的情况下生存2小时",
+            check = function(player)
+                return player.daily_hunger_time and player.daily_hunger_time >= 120 -- 2小时 = 120分钟
+            end,
+            start = function(player)
+                player.daily_hunger_time = 0
+                player.hunger_challenge_active = false
+                
+                -- 检查饥饿状态
+                player.hunger_check_task = player:DoPeriodicTask(60, function() -- 每分钟检查一次
+                    if player.components.hunger and player.components.hunger:GetPercent() <= 0.1 then
+                        player.hunger_challenge_active = true
+                        player.daily_hunger_time = (player.daily_hunger_time or 0) + 1
+                        
+                        -- 每30分钟提示一次
+                        if player.daily_hunger_time % 30 == 0 and player.components.talker then
+                            local minutes = player.daily_hunger_time
+                            player.components.talker:Say("饥饿艺术家进度: " .. minutes .. "/120分钟")
+                        end
+                    else
+                        player.hunger_challenge_active = false
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予大量食物
+                    for i=1,3 do
+                        player.components.inventory:GiveItem(SpawnPrefab("baconeggs"))
+                    end
+                    player.components.inventory:GiveItem(SpawnPrefab("dragonpie"))
+                    player.components.inventory:GiveItem(SpawnPrefab("dragonpie"))
+                    
+                    -- 永久提升饥饿上限
+                    if player.components.hunger then
+                        player.components.hunger:SetMax(player.components.hunger.max + 50)
+                    end
+                end
+            end,
+            reward_description = "3个培根煎蛋、2个龙派，以及永久增加50点最大饥饿值",
+            difficulty = "hard"
+        },
+        {
+            name = "疯狂科学家",
+            description = "在一天内制作15种不同的科技物品",
+            check = function(player)
+                return player.daily_tech_crafted and #player.daily_tech_crafted >= 15
+            end,
+            start = function(player)
+                player.daily_tech_crafted = {}
+                player:ListenForEvent("builditem", function(inst, data)
+                    if data and data.item and data.item.prefab then
+                        -- 检查是否是科技物品
+                        if data.item.components.prototyper or 
+                           string.find(data.item.prefab, "staff") or
+                           string.find(data.item.prefab, "amulet") or
+                           string.find(data.item.prefab, "armor") or
+                           data.item:HasTag("science") then
+                            if not table.contains(player.daily_tech_crafted, data.item.prefab) then
+                                table.insert(player.daily_tech_crafted, data.item.prefab)
+                                if player.components.talker then
+                                    player.components.talker:Say("疯狂科学家进度: " .. #player.daily_tech_crafted .. "/15")
+                                end
+                            end
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予珍贵的科技材料
+                    player.components.inventory:GiveItem(SpawnPrefab("gears"))
+                    player.components.inventory:GiveItem(SpawnPrefab("gears"))
+                    player.components.inventory:GiveItem(SpawnPrefab("gears"))
+                    player.components.inventory:GiveItem(SpawnPrefab("purplegem"))
+                    player.components.inventory:GiveItem(SpawnPrefab("orangegem"))
+                    
+                    -- 临时提升制作速度
+                    if player.components.builder then
+                        local old_ingredientmod = player.components.builder.ingredientmod
+                        player.components.builder.ingredientmod = 0.5 -- 减少50%材料消耗
+                        player:DoTaskInTime(480, function() -- 8分钟后恢复
+                            if player.components.builder then
+                                player.components.builder.ingredientmod = old_ingredientmod
+                            end
+                        end)
+                    end
+                end
+            end,
+            reward_description = "3个齿轮、1个紫宝石、1个橙宝石，以及8分钟的材料消耗减少50%",
+            difficulty = "hard"
+        },
+        {
+            name = "暗影征服者",
+            description = "在一天内击杀5个暗影生物",
+            check = function(player)
+                local shadow_kills = 0
+                if player.daily_kills then
+                    for creature, count in pairs(player.daily_kills) do
+                        if creature == "crawlinghorror" or 
+                           creature == "terrorbeak" or 
+                           creature == "shadowskittish" or
+                           creature == "nightmarebeak" or
+                           creature == "crawlingnightmare" then
+                            shadow_kills = shadow_kills + count
+                        end
+                    end
+                end
+                return shadow_kills >= 5
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予暗影相关物品
+                    player.components.inventory:GiveItem(SpawnPrefab("nightsword"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    
+                    -- 临时提升理智恢复
+                    if player.components.sanity then
+                        local old_rate = player.components.sanity.rate_modifier
+                        player.components.sanity.rate_modifier = old_rate + 3 -- 每分钟额外恢复3点理智
+                        player:DoTaskInTime(480, function() -- 8分钟后恢复
+                            if player.components.sanity then
+                                player.components.sanity.rate_modifier = old_rate
+                            end
+                        end)
+                    end
+                end
+            end,
+            reward_description = "1把暗夜剑、5个噩梦燃料，以及8分钟的理智恢复提升",
+            difficulty = "hard"
+        },
+        {
+            name = "洞穴探险家",
+            description = "在洞穴中生存8小时",
+            check = function(player)
+                return player.daily_cave_time and player.daily_cave_time >= 480 -- 8小时 = 480分钟
+            end,
+            start = function(player)
+                player.daily_cave_time = 0
+                player.in_cave = false
+                
+                -- 检查是否在洞穴中
+                player.cave_check_task = player:DoPeriodicTask(60, function() -- 每分钟检查一次
+                    if TheWorld:HasTag("cave") then
+                        player.in_cave = true
+                        player.daily_cave_time = (player.daily_cave_time or 0) + 1
+                        
+                        -- 每小时提示一次
+                        if player.daily_cave_time % 60 == 0 and player.components.talker then
+                            local hours = math.floor(player.daily_cave_time / 60)
+                            player.components.talker:Say("洞穴探险进度: " .. hours .. "/8小时")
+                        end
+                    else
+                        player.in_cave = false
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予洞穴探险相关物品
+                    player.components.inventory:GiveItem(SpawnPrefab("lantern"))
+                    player.components.inventory:GiveItem(SpawnPrefab("minerhat"))
+                    player.components.inventory:GiveItem(SpawnPrefab("slurtleslime"))
+                    player.components.inventory:GiveItem(SpawnPrefab("slurtleslime"))
+                    player.components.inventory:GiveItem(SpawnPrefab("slurtleslime"))
+                    
+                    -- 永久提升夜视能力
+                    player:AddTag("nightvision")
+                end
+            end,
+            reward_description = "1个提灯、1个矿工帽、3个鼻涕虫粘液，以及永久夜视能力",
+            difficulty = "hard"
+        },
+        {
+            name = "巨人杀手",
+            description = "在一天内单独击杀一个季节BOSS",
+            check = function(player)
+                local boss_killed = false
+                if player.daily_boss_solo_kills then
+                    for boss, _ in pairs(player.daily_boss_solo_kills) do
+                        boss_killed = true
+                        break
+                    end
+                end
+                return boss_killed
+            end,
+            start = function(player)
+                player.daily_boss_solo_kills = {}
+                player:ListenForEvent("killed", function(inst, data)
+                    if data and data.victim then
+                        -- 检查是否是季节BOSS
+                        if (data.victim.prefab == "deerclops" or 
+                            data.victim.prefab == "moose" or 
+                            data.victim.prefab == "dragonfly" or 
+                            data.victim.prefab == "bearger") then
+                            
+                            -- 检查附近是否有其他玩家
+                            local x, y, z = data.victim.Transform:GetWorldPosition()
+                            local nearby_players = TheSim:FindEntities(x, y, z, 30, {"player"})
+                            
+                            if #nearby_players <= 1 then -- 只有自己
+                                player.daily_boss_solo_kills[data.victim.prefab] = true
+                                if player.components.talker then
+                                    player.components.talker:Say("巨人杀手任务完成！")
+                                end
+                            end
+                        end
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予BOSS战利品和强力武器
+                    player.components.inventory:GiveItem(SpawnPrefab("ruinshat"))
+                    player.components.inventory:GiveItem(SpawnPrefab("ruins_bat"))
+                    
+                    -- 临时提升伤害
+                    if player.components.combat then
+                        local old_damage_mult = player.components.combat.externaldamagemultipliers:Get("boss_killer_bonus")
+                        player.components.combat.externaldamagemultipliers:SetModifier("boss_killer_bonus", 2.0)
+                        player:DoTaskInTime(600, function() -- 10分钟后恢复
+                            if player.components.combat then
+                                player.components.combat.externaldamagemultipliers:RemoveModifier("boss_killer_bonus")
+                            end
+                        end)
+                    end
+                end
+            end,
+            reward_description = "远古头盔、远古棒，以及10分钟的双倍伤害",
+            difficulty = "hard"
+        },
+        {
+            name = "月光舞者",
+            description = "在满月夜晚不使用任何光源生存整晚",
+            check = function(player)
+                return player.daily_moonlight_survived
+            end,
+            start = function(player)
+                player.daily_moonlight_survived = false
+                player.moonlight_challenge_active = false
+                player.moonlight_challenge_failed = false
+                
+                -- 检查是否是满月夜晚
+                player.moonlight_check_task = player:DoPeriodicTask(1, function()
+                    if TheWorld.state.isfullmoon and TheWorld.state.isnight then
+                        player.moonlight_challenge_active = true
+                        
+                        -- 检查是否使用了光源
+                        local light_sources = {"torch", "lantern", "minerhat", "firepit", "campfire", "nightlight"}
+                        for _, source in ipairs(light_sources) do
+                            local items = player.components.inventory:FindItems(function(item) 
+                                return item.prefab == source and item.components.equippable and item.components.equippable:IsEquipped()
+                            end)
+                            
+                            if #items > 0 then
+                                player.moonlight_challenge_failed = true
+                                if player.components.talker then
+                                    player.components.talker:Say("月光舞者挑战失败！使用了光源。")
+                                end
+                                break
+                            end
+                        end
+                        
+                        -- 检查附近是否有火堆
+                        local x, y, z = player.Transform:GetWorldPosition()
+                        local fires = TheSim:FindEntities(x, y, z, 10, {"fire"})
+                        if #fires > 0 then
+                            player.moonlight_challenge_failed = true
+                            if player.components.talker then
+                                player.components.talker:Say("月光舞者挑战失败！靠近了火源。")
+                            end
+                        end
+                    else
+                        -- 如果挑战结束且没有失败，则成功
+                        if player.moonlight_challenge_active and not player.moonlight_challenge_failed and TheWorld.state.isdusk then
+                            player.daily_moonlight_survived = true
+                            if player.components.talker then
+                                player.components.talker:Say("月光舞者挑战成功！")
+                            end
+                        end
+                        
+                        player.moonlight_challenge_active = false
+                    end
+                end)
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    -- 给予月亮相关物品
+                    player.components.inventory:GiveItem(SpawnPrefab("moonrockidol"))
+                    player.components.inventory:GiveItem(SpawnPrefab("moonrocknugget"))
+                    player.components.inventory:GiveItem(SpawnPrefab("moonrocknugget"))
+                    player.components.inventory:GiveItem(SpawnPrefab("moonrocknugget"))
+                    
+                    -- 永久提升夜视能力
+                    --player:AddTag("nightvision")
+                end
+            end,
+            reward_description = "1个月岩雕像、3个月岩",
+            difficulty = "hard"
+        },
+        -- 添加新的制作物品任务
+        -- 唤星者魔杖
+        CreateCraftingTask(
+            "唤星者魔杖", 
+            "orangestaff", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("purplegem"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                end
+            end,
+            "1个紫宝石和2个噩梦燃料",
+            "hard"
+        ),
+
+        -- 懒人魔杖
+        CreateCraftingTask(
+            "懒人魔杖", 
+            "yellowstaff", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("yellowgem"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                end
+            end,
+            "1个黄宝石和2个噩梦燃料",
+            "hard"
+        ),
+
+        -- 拆解魔杖
+        CreateCraftingTask(
+            "拆解魔杖", 
+            "greenstaff", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("greengem"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                end
+            end,
+            "1个绿宝石和2个噩梦燃料",
+            "hard"
+        ),
+
+        -- 多用斧镐
+        CreateCraftingTask(
+            "多用斧镐", 
+            "multitool_axe_pickaxe", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    player.components.inventory:GiveItem(SpawnPrefab("twigs"))
+                    player.components.inventory:GiveItem(SpawnPrefab("twigs"))
+                end
+            end,
+            "2个金块和2个树枝",
+            "medium"
+        ),
+
+        -- 高级耕作先驱帽
+        CreateCraftingTask(
+            "高级耕作先驱帽", 
+            "hat_soil", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("soil_amender"))
+                    player.components.inventory:GiveItem(SpawnPrefab("soil_amender"))
+                end
+            end,
+            "2个堆肥",
+            "medium"
+        ),
+
+        -- 铥矿皇冠
+        CreateCraftingTask(
+            "铥矿皇冠", 
+            "ruinshat", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("thulecite"))
+                    player.components.inventory:GiveItem(SpawnPrefab("thulecite"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                end
+            end,
+            "2个铥矿和2个噩梦燃料",
+            "hard"
+        ),
+
+        -- 铥矿甲
+        CreateCraftingTask(
+            "铥矿甲", 
+            "armorruins", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("thulecite"))
+                    player.components.inventory:GiveItem(SpawnPrefab("thulecite"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                end
+            end,
+            "2个铥矿和2个噩梦燃料",
+            "hard"
+        ),
+
+        -- 铥矿棒
+        CreateCraftingTask(
+            "铥矿棒", 
+            "ruins_bat", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("thulecite"))
+                    player.components.inventory:GiveItem(SpawnPrefab("thulecite"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                end
+            end,
+            "2个铥矿和2个噩梦燃料",
+            "hard"
+        ),
+
+        -- 铥墙
+        CreateCraftingTask(
+            "铥墙", 
+            "wall_ruins_item", 
+            4, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("thulecite"))
+                    player.components.inventory:GiveItem(SpawnPrefab("thulecite"))
+                end
+            end,
+            "2个铥矿",
+            "medium"
+        ),
+
+        -- 铥矿徽章
+        CreateCraftingTask(
+            "铥矿徽章", 
+            "thulecite_medallion", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("thulecite_pieces"))
+                    player.components.inventory:GiveItem(SpawnPrefab("thulecite_pieces"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                end
+            end,
+            "2个铥矿碎片和2个噩梦燃料",
+            "medium"
+        ),
+
+        -- 懒人护符
+        CreateCraftingTask(
+            "懒人护符", 
+            "orangeamulet", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("orangegem"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                end
+            end,
+            "1个橙宝石和2个噩梦燃料",
+            "hard"
+        ),
+
+        -- 魔光护符
+        CreateCraftingTask(
+            "魔光护符", 
+            "yellowamulet", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("yellowgem"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                end
+            end,
+            "1个黄宝石和2个噩梦燃料",
+            "hard"
+        ),
+
+        -- 建造护符
+        CreateCraftingTask(
+            "建造护符", 
+            "greenamulet", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("greengem"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                end
+            end,
+            "1个绿宝石和2个噩梦燃料",
+            "hard"
+        ),
+
+        -- 眼睛炮塔
+        CreateCraftingTask(
+            "眼睛炮塔", 
+            "eyeturret_item", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("deerclops_eyeball"))
+                    player.components.inventory:GiveItem(SpawnPrefab("minotaurhorn"))
+                end
+            end,
+            "1个独眼巨鹿眼球和1个远古守护者角",
+            "hard"
+        ),
+
+        -- 虚空长袍
+        CreateCraftingTask(
+            "虚空长袍", 
+            "armor_voidcloth", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("voidcloth"))
+                    player.components.inventory:GiveItem(SpawnPrefab("voidcloth"))
+                end
+            end,
+            "2个虚空布料",
+            "hard"
+        ),
+
+        -- 虚空风帽
+        CreateCraftingTask(
+            "虚空风帽", 
+            "hat_voidcloth", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("voidcloth"))
+                    player.components.inventory:GiveItem(SpawnPrefab("voidcloth"))
+                end
+            end,
+            "2个虚空布料",
+            "hard"
+        ),
+
+        -- 暗影伞
+        CreateCraftingTask(
+            "暗影伞", 
+            "shadowtentacle", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
+                end
+            end,
+            "3个噩梦燃料",
+            "medium"
+        ),
+
+        -- 暗影槌
+        CreateCraftingTask(
+            "暗影槌", 
+            "nightstick", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("lightninggoathorn"))
+                    player.components.inventory:GiveItem(SpawnPrefab("lightninggoathorn"))
+                end
+            end,
+            "2个闪电羊角",
+            "medium"
+        ),
+
+        -- 玻璃刀
+        CreateCraftingTask(
+            "玻璃刀", 
+            "glasscutter", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("moonglass"))
+                    player.components.inventory:GiveItem(SpawnPrefab("moonglass"))
+                    player.components.inventory:GiveItem(SpawnPrefab("moonglass"))
+                end
+            end,
+            "3个月亮碎片",
+            "medium"
+        ),
+        
+        -- 月光玻璃斧
+        CreateCraftingTask(
+            "月光玻璃斧", 
+            "moonglassaxe", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("moonglass"))
+                    player.components.inventory:GiveItem(SpawnPrefab("moonglass"))
+                    player.components.inventory:GiveItem(SpawnPrefab("moonglass"))
+                end
+            end,
+            "3个月亮碎片",
+            "medium"
+        ),
+        
+        -- 月亮蘑菇帽
+        CreateCraftingTask(
+            "月亮蘑菇帽", 
+            "hat_mushroom", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("moon_cap"))
+                    player.components.inventory:GiveItem(SpawnPrefab("moon_cap"))
+                end
+            end,
+            "2个月亮蘑菇",
+            "medium"
+        ),
+        
+        -- 绳子
+        CreateCraftingTask(
+            "绳子", 
+            "rope", 
+            3, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("cutgrass"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutgrass"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutgrass"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutgrass"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutgrass"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutgrass"))
+                end
+            end,
+            "6个割下的草",
+            "easy"
+        ),
+        
+        -- 木板
+        CreateCraftingTask(
+            "木板", 
+            "boards", 
+            3, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("log"))
+                    player.components.inventory:GiveItem(SpawnPrefab("log"))
+                    player.components.inventory:GiveItem(SpawnPrefab("log"))
+                    player.components.inventory:GiveItem(SpawnPrefab("log"))
+                end
+            end,
+            "4个木头",
+            "easy"
+        ),
+        
+        -- 石砖
+        CreateCraftingTask(
+            "石砖", 
+            "cutstone", 
+            3, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("rocks"))
+                    player.components.inventory:GiveItem(SpawnPrefab("rocks"))
+                    player.components.inventory:GiveItem(SpawnPrefab("rocks"))
+                    player.components.inventory:GiveItem(SpawnPrefab("rocks"))
+                    player.components.inventory:GiveItem(SpawnPrefab("rocks"))
+                    player.components.inventory:GiveItem(SpawnPrefab("rocks"))
+                end
+            end,
+            "6个石头",
+            "easy"
+        ),
+        
+        -- 莎草纸
+        CreateCraftingTask(
+            "莎草纸", 
+            "papyrus", 
+            3, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("cutreeds"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutreeds"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutreeds"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutreeds"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutreeds"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutreeds"))
+                end
+            end,
+            "6个芦苇",
+            "medium"
+        ),
+        
+        -- 电子元件
+        CreateCraftingTask(
+            "电子元件", 
+            "transistor", 
+            2, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                end
+            end,
+            "4个金块",
+            "medium"
+        ),
+        
+        -- 蜂蜡
+        CreateCraftingTask(
+            "蜂蜡", 
+            "beeswax", 
+            2, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("honeycomb"))
+                    player.components.inventory:GiveItem(SpawnPrefab("honeycomb"))
+                end
+            end,
+            "2个蜂巢",
+            "medium"
+        ),
+        
+        -- 大理石豌豆
+        CreateCraftingTask(
+            "大理石豌豆", 
+            "marblebean", 
+            3, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("marble"))
+                    player.components.inventory:GiveItem(SpawnPrefab("marble"))
+                    player.components.inventory:GiveItem(SpawnPrefab("marble"))
+                end
+            end,
+            "3个大理石",
+            "medium"
+        ),
+        
+        -- 熊皮
+        CreateCraftingTask(
+            "熊皮", 
+            "bearger_fur", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("meat"))
+                    player.components.inventory:GiveItem(SpawnPrefab("meat"))
+                    player.components.inventory:GiveItem(SpawnPrefab("meat"))
+                    player.components.inventory:GiveItem(SpawnPrefab("meat"))
+                end
+            end,
+            "4个肉",
+            "hard"
+        ),
+        
+        -- 噩梦燃料
+        CreateCraftingTask(
+            "噩梦燃料", 
+            "nightmarefuel", 
+            5, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("purplegem"))
+                end
+            end,
+            "1个紫宝石",
+            "medium"
+        ),
+        
+        -- 紫宝石
+        CreateCraftingTask(
+            "紫宝石", 
+            "purplegem", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("redgem"))
+                    player.components.inventory:GiveItem(SpawnPrefab("bluegem"))
+                end
+            end,
+            "1个红宝石和1个蓝宝石",
+            "hard"
+        )
     }
     
     -- 初始化
@@ -3022,6 +4308,42 @@ function DailyTasks:GenerateTasks()
                 self.current_task.start(self.inst)
             end
         end
+    end
+end
+
+function DailyTasks:ShowTasks()
+    local msg = "当前任务:\n"
+    
+    if self.config.TASK_COUNT > 1 and #self.current_tasks > 0 then
+        -- 多任务模式
+        for i, task in ipairs(self.current_tasks) do
+            local task_name = type(task.name) == "function" and task.name() or task.name
+            local desc = type(task.description) == "function" and task.description() or task.description
+            local reward = type(task.reward_description) == "function" and task.reward_description() or task.reward_description
+            local status = self.tasks_completed[i] and "已完成" or "未完成"
+            
+            msg = msg .. "#" .. i .. ": " .. task_name .. "\n"
+            msg = msg .. desc .. "\n"
+            msg = msg .. "奖励: " .. reward .. "\n"
+            msg = msg .. "状态: " .. status .. "\n\n"
+        end
+    elseif self.current_task then
+        -- 单任务模式
+        local task_name = type(self.current_task.name) == "function" and self.current_task.name() or self.current_task.name
+        local desc = type(self.current_task.description) == "function" and self.current_task.description() or self.current_task.description
+        local reward = type(self.current_task.reward_description) == "function" and self.current_task.reward_description() or self.current_task.reward_description
+        local status = self.task_completed and "已完成" or "未完成"
+        
+        msg = msg .. task_name .. "\n"
+        msg = msg .. desc .. "\n"
+        msg = msg .. "奖励: " .. reward .. "\n"
+        msg = msg .. "状态: " .. status
+    else
+        msg = msg .. "暂无任务"
+    end
+    
+    if self.inst.components.talker then
+        self.inst.components.talker:Say(msg)
     end
 end
 
