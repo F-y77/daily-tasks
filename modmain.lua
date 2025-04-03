@@ -166,9 +166,127 @@ DAILYTASKS.TRANSLATIONS = {
     ["已击杀："] = "Kills:",
     ["已击杀BOSS："] = "Boss Kills:",
     ["已制作："] = "Items Crafted:",
+
+    -- 采矿任务相关
+    ["采集石头任务"] = "Rock Mining Task",
+    ["采集金矿石任务（只包含主世界金矿石）"] = "Gold Mining Task (Overworld Only)",
+    ["采集硝石任务"] = "Nitre Mining Task",
+    ["采集燧石任务"] = "Flint Mining Task",
+    ["采冰任务"] = "Ice Mining Task",
+    ["挖掘%d个金矿石"] = "Mine %d gold nuggets",
+    ["开采%d块大理石"] = "Mine %d marble",
+    ["采集%d块石头"] = "Mine %d rocks",
+    ["采集%d个硝石"] = "Mine %d nitre",
+    ["采集%d个燧石"] = "Mine %d flint",
+    ["采集%d块冰"] = "Mine %d ice",
+    ["%d块石头"] = "%d rocks",
+    ["%d个金块"] = "%d gold nuggets",
+    ["%d个大理石"] = "%d marble pieces",
+    ["%d个火药"] = "%d gunpowder",
+    ["%d个镐子"] = "%d pickaxes",
+    ["%d块冰"] = "%d ice",
+
+    -- 钓鱼任务相关
+    ["钓上%d条鱼"] = "Catch %d fish",
+    ["钓%d条大鱼"] = "Catch %d big fish",
+    ["%d个鱼肉"] = "%d fish meat",
+    ["%d个大鱼肉"] = "%d big fish meat",
+
+    -- 制作魔法物品任务
+
+    ["%d个曼德拉草"] = "%d Mandrakes",
+    ["%d个红宝石"] = "%d Red Gems",
+    ["%d个蓝宝石"] = "%d Blue Gems",
+
+    -- 制作装备任务
+
+    ["%d个花瓣"] = "%d Petals",
+    ["%d个割下的草"] = "%d Cut Grass",
+    ["%d个蜘蛛丝"] = "%d Silk",
+    ["%d只兔子"] = "%d Rabbits",
+    ["%d个牛毛"] = "%d Beefalo Wool",
+    ["%d个海象牙"] = "%d Walrus Tusks",
+
+    -- 制作黄金工具任务
+
+
+    -- 状态和进度提示
+    ["任务完成: "] = "Task Completed: ",
+    ["任务进度: "] = "Task Progress: ",
+
+    -- 狩猎任务相关
+    ["狩猎兔人任务"] = "Hunt Bunnyman Task",
+    ["狩猎鱼人任务"] = "Hunt Merm Task",
+    ["狩猎海象任务"] = "Hunt Walrus Task",
+    ["狩猎发条骑士任务"] = "Hunt Clockwork Knight Task",
+    ["狩猎火鸡任务"] = "Hunt Gobbler Task",
+    ["狩猎鼹鼠任务"] = "Hunt Mole Task",
+    ["狩猎皮弗娄牛任务"] = "Hunt Beefalo Task",
+    ["狩猎蜘蛛战士任务"] = "Hunt Spider Warrior Task",
+    ["狩猎猎犬任务"] = "Hunt Hound Task",
+    ["狩猎蓝色猎犬任务"] = "Hunt Blue Hound Task",
+    ["狩猎红色猎犬任务"] = "Hunt Red Hound Task",
+
+    -- 特殊任务相关
+    ["超级马里奥挑战"] = "Super Mario Challenge",
+    ["Among Us 厨房危机"] = "Among Us Kitchen Crisis",
+    ["社恐波奇酱"] = "Social Anxiety Challenge",
+    ["恐怖游轮循环"] = "Horror Cruise Loop",
+    ["咩咩羊启示录"] = "Sheep Apocalypse",
+    ["工匠大师"] = "Master Craftsman",
+    ["资源收集者"] = "Resource Collector",
+    ["钓鱼大师"] = "Master Fisherman",
+    ["家园设计师"] = "Home Designer",
+    ["室内装饰师"] = "Interior Decorator",
+    ["灯光设计师"] = "Lighting Designer",
+    ["救援专家"] = "Rescue Expert",
+    ["慷慨的厨师"] = "Generous Chef",
+    ["建筑大师"] = "Master Builder",
+    ["团队治疗师"] = "Team Healer",
+    ["裸奔挑战"] = "Naked Runner Challenge",
+    ["猪人派对"] = "Pigman Party",
+    ["疯狂钓鱼佬"] = "Crazy Fisher",
+    ["熊孩子"] = "Naughty Kid",
+    ["无敌挑战者"] = "Invincible Challenger",
+    ["疯狂科学家"] = "Mad Scientist",
+    ["暗影征服者"] = "Shadow Conqueror",
+    ["巨人杀手"] = "Giant Slayer",
+    ["月光舞者"] = "Moonlight Dancer",
+
+    -- 任务描述相关
+    ["戴着红色蘑菇帽击杀蘑菇地精"] = "Kill a Mushgnome while wearing a Red Mushroom Hat",
+    ["给队友喂食怪物千层饼"] = "Feed a teammate Monster Lasagna",
+    ["保持独处4小时"] = "Stay alone for 4 hours",
+    ["完成死亡复仇循环"] = "Complete the death revenge cycle",
+    ["封你为神 - 拥有20个信徒"] = "Become a God - Have 20 followers",
+    ["在一天内制作10件不同的物品"] = "Craft 10 different items in one day",
+    ["在一天内收集50个基础资源"] = "Collect 50 basic resources in one day",
+    ["在一天内钓上5条鱼"] = "Catch 5 fish in one day",
+    ["在一天内收集5种不同的墙体材料"] = "Collect 5 different types of wall materials in one day",
+    ["在一天内收集3种不同的家具物品"] = "Collect 3 different types of furniture in one day",
+    ["在一天内收集3种不同的照明物品"] = "Collect 3 different types of lighting items in one day",
+    ["在一天内复活1名队友"] = "Revive 1 teammate in one day",
+    ["在一天内给其他玩家提供5次食物"] = "Provide food to other players 5 times in one day",
+    ["在一天内建造3种不同的建筑物"] = "Build 3 different structures in one day",
+    ["在一天内治疗队友总计100点生命值"] = "Heal teammates for a total of 100 health in one day",
+    ["不穿任何装备跑步5分钟"] = "Run for 5 minutes without wearing any equipment",
+    ["让5只猪人同时跟随你"] = "Have 5 pigmen following you at the same time",
+    ["连续钓鱼5分钟不做其他事"] = "Fish continuously for 5 minutes without doing anything else",
+    ["破坏5个蜘蛛网、兔子洞或蜜蜂窝"] = "Destroy 5 spider dens, rabbit holes, or beehives",
+    ["在一天内不受到任何伤害"] = "Take no damage for an entire day",
+    ["在一天内制作15种不同的科技物品"] = "Craft 15 different tech items in one day",
+    ["在一天内击杀5个暗影生物"] = "Kill 5 shadow creatures in one day",
+    ["在一天内单独击杀一个季节BOSS"] = "Solo kill a seasonal boss in one day",
+    ["在满月夜晚不使用任何光源生存整晚"] = "Survive a full moon night without using any light source",
+
+    -- 季节提示相关
+    ["冬季出没"] = "Winter Only",
+    ["夏季出没"] = "Summer Only",
+    ["只能在冬季完成"] = "Can only be completed in winter",
+    ["只能在夏季完成"] = "Can only be completed in summer"
 }
 
--- 添加翻译函数
+-- 修改翻译函数以支持更复杂的模式匹配
 DAILYTASKS.Translate = function(text)
     if DAILYTASKS.CONFIG.LANGUAGE == "zh" then
         return text
@@ -179,12 +297,15 @@ DAILYTASKS.Translate = function(text)
         return DAILYTASKS.TRANSLATIONS[text]
     end
     
-    -- 模式匹配翻译
+    -- 处理带数字的文本
     for pattern, replacement in pairs(DAILYTASKS.TRANSLATIONS) do
-        if string.find(pattern, "%%d%+") then
-            local number = string.match(text, pattern)
+        if string.find(pattern, "%%d") then
+            local number = string.match(text, "%d+")
             if number then
-                return string.format(replacement, number)
+                local test_text = string.gsub(text, number, "%%d")
+                if test_text == pattern then
+                    return string.format(replacement, number)
+                end
             end
         end
     end
@@ -510,82 +631,31 @@ DAILYTASKS.TranslateRewardDescription = function(desc)
     return desc
 end
 
--- 修改按V键的处理函数，优化任务统计面板
+-- 修改快捷键绑定部分
+local function BindKeys()
+    if not TheInput then
+        return
+    end
+    
+    -- 绑定查看任务快捷键
+    TheInput:AddKeyDownHandler(_G[CHECK_TASK_KEY], function()
+        if ThePlayer then
+            SendModRPCToServer(MOD_RPC["DailyTasks"]["CheckTasks"])
+        end
+    end)
+    
+    -- 绑定查看进度快捷键
+    TheInput:AddKeyDownHandler(_G[CHECK_PROGRESS_KEY], function()
+        if ThePlayer then
+            SendModRPCToServer(MOD_RPC["DailyTasks"]["CheckProgress"])
+        end
+    end)
+end
 
-GLOBAL.TheInput:AddKeyDownHandler(GLOBAL.KEY_V, function()
-    if GLOBAL.ThePlayer and GLOBAL.ThePlayer.components.dailytasks then
-        local tasks = GLOBAL.ThePlayer.components.dailytasks
-        local msg = DAILYTASKS.Translate("当前每日任务：") .. "\n\n"
-        
-        -- 显示任务信息
-        if tasks.config.TASK_COUNT > 1 and #tasks.current_tasks > 0 then
-            for i, task in ipairs(tasks.current_tasks) do
-                local task_name = type(task.name) == "function" and task.name() or DAILYTASKS.Translate(task.name)
-                local desc = type(task.description) == "function" and task.description() or DAILYTASKS.Translate(task.description)
-                local reward = type(task.reward_description) == "function" and task.reward_description() or DAILYTASKS.Translate(task.reward_description)
-                local status = tasks.tasks_completed[i] and DAILYTASKS.Translate("已完成") or DAILYTASKS.Translate("未完成")
-                
-                msg = msg .. "#" .. i .. ": " .. task_name .. "\n"
-                msg = msg .. desc .. "\n"
-                msg = msg .. DAILYTASKS.Translate("奖励:") .. " " .. reward .. "\n"
-                msg = msg .. DAILYTASKS.Translate("状态:") .. " " .. status .. "\n\n"
-            end
-        elseif tasks.current_task then
-            local task_name = type(tasks.current_task.name) == "function" and tasks.current_task.name() or DAILYTASKS.Translate(tasks.current_task.name)
-            local desc = type(tasks.current_task.description) == "function" and tasks.current_task.description() or DAILYTASKS.Translate(tasks.current_task.description)
-            local reward = type(tasks.current_task.reward_description) == "function" and tasks.current_task.reward_description() or DAILYTASKS.Translate(tasks.current_task.reward_description)
-            local status = tasks.task_completed and DAILYTASKS.Translate("已完成") or DAILYTASKS.Translate("未完成")
-            
-            msg = msg .. task_name .. "\n"
-            msg = msg .. desc .. "\n"
-            msg = msg .. DAILYTASKS.Translate("奖励:") .. " " .. reward .. "\n"
-            msg = msg .. DAILYTASKS.Translate("状态:") .. " " .. status
-        else
-            msg = msg .. DAILYTASKS.Translate("暂无任务")
-        end
-        
-        -- 添加简化的统计信息
-        msg = msg .. "\n\n" .. DAILYTASKS.Translate("今日统计：") .. "\n"
-        
-        -- 采矿统计
-        msg = msg .. DAILYTASKS.Translate("已采矿：") .. " " .. (GLOBAL.ThePlayer.daily_rocks_mined or 0) .. "\n"
-        
-        -- 击杀统计
-        local total_kills = 0
-        local boss_kills = 0
-        if GLOBAL.ThePlayer.daily_kills then
-            for creature, count in pairs(GLOBAL.ThePlayer.daily_kills) do
-                total_kills = total_kills + count
-            end
-        end
-        msg = msg .. DAILYTASKS.Translate("已击杀：") .. " " .. total_kills .. "\n"
-        
-        -- BOSS击杀统计
-        local boss_kills = 0
-        if GLOBAL.ThePlayer.daily_kills then
-            for creature, count in pairs(GLOBAL.ThePlayer.daily_kills) do
-                -- 检查是否是BOSS
-                if creature == "deerclops" or 
-                   creature == "moose" or 
-                   creature == "dragonfly" or 
-                   creature == "bearger" or 
-                   creature == "klaus" or 
-                   creature == "antlion" or 
-                   creature == "minotaur" or 
-                   creature == "beequeen" or 
-                   creature == "toadstool" or 
-                   creature == "stalker" or 
-                   creature == "stalker_atrium" then
-                    boss_kills = boss_kills + count
-                end
-            end
-        end
-        msg = msg .. DAILYTASKS.Translate("已击杀BOSS：") .. " " .. boss_kills .. "\n"
-        
-        -- 显示消息
-        if GLOBAL.ThePlayer.components.talker then
-            GLOBAL.ThePlayer.components.talker:Say(msg)
-        end
+-- 在适当的地方调用BindKeys函数
+AddSimPostInit(function()
+    if TheInput then
+        BindKeys()
     end
 end)
 
@@ -625,38 +695,4 @@ AddPlayerPostInit(function(inst)
             inst.among_us_kills = nil
         end
     end)
-end)
-
--- 修改快捷键绑定部分
-local function BindKeys()
-    if not TheInput then
-        return
-    end
-    
-    -- 检查是否禁用了查看任务快捷键
-    if CHECK_TASK_KEY ~= "DISABLED" then
-        TheInput:AddKeyDownHandler(_G[CHECK_TASK_KEY], function()
-            if ThePlayer then
-                -- 使用RPC方式，这样更可靠
-                SendModRPCToServer(MOD_RPC["DailyTasks"]["CheckTasks"])
-            end
-        end)
-    end
-    
-    -- 检查是否禁用了查看进度快捷键
-    if CHECK_PROGRESS_KEY ~= "DISABLED" then
-        TheInput:AddKeyDownHandler(_G[CHECK_PROGRESS_KEY], function()
-            if ThePlayer then
-                -- 使用RPC方式
-                SendModRPCToServer(MOD_RPC["DailyTasks"]["CheckProgress"])
-            end
-        end)
-    end
-end
-
--- 在适当的地方调用BindKeys函数
-AddSimPostInit(function()
-    if TheInput then
-        BindKeys()
-    end
 end) 

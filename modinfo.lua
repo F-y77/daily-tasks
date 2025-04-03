@@ -85,7 +85,7 @@ configuration_options = {
     },
     {
         name = "CHECK_TASK_KEY",
-        label = "查看任务快捷键，可以关闭",
+        label = "查看任务快捷键",
         options = {
             {description = "R键", data = "KEY_R", hover = "默认值"},
             {description = "T键", data = "KEY_T"},
@@ -96,14 +96,13 @@ configuration_options = {
             {description = "V键", data = "KEY_V"},
             {description = "B键", data = "KEY_B"},
             {description = "N键", data = "KEY_N"},
-            {description = "M键", data = "KEY_M"},
-            {description = "关闭", data = "DISABLED", hover = "关闭快捷键"}
+            {description = "M键", data = "KEY_M"}
         },
         default = "KEY_R"
     },
     {
         name = "CHECK_PROGRESS_KEY",
-        label = "查看进度快捷键，可以关闭",
+        label = "查看进度快捷键",
         options = {
             {description = "F键", data = "KEY_F"},
             {description = "Y键", data = "KEY_Y"},
@@ -112,8 +111,7 @@ configuration_options = {
             {description = "V键", data = "KEY_V", hover = "默认值"},
             {description = "B键", data = "KEY_B"},
             {description = "N键", data = "KEY_N"},
-            {description = "M键", data = "KEY_M"},
-            {description = "关闭", data = "DISABLED", hover = "关闭快捷键"}
+            {description = "M键", data = "KEY_M"}
         },
         default = "KEY_V"
     }

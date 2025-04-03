@@ -66,7 +66,11 @@ local DailyTasks = Class(function(self, inst)
                 return found_count >= count
             end,
             reward = reward_fn,
-            reward_description = reward_desc,
+            reward_description = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"
+                    and reward_desc
+                    or "奖励: " .. reward_desc
+            end,
             difficulty = difficulty or "medium"
         }
     end
@@ -82,9 +86,7 @@ local DailyTasks = Class(function(self, inst)
             end,
             description = function() 
                 local count = math.ceil(10 * self.config.DIFFICULTY_MULTIPLIER)
-                return DAILYTASKS.CONFIG.LANGUAGE == "en"
-                    and "Collect " .. count .. " berries"
-                    or "采集" .. count .. "个浆果" 
+                return DAILYTASKS.Translate("采集" .. count .. "个浆果")
             end,
             check = function(player)
                 local required = math.ceil(10 * self.config.DIFFICULTY_MULTIPLIER)
@@ -112,9 +114,7 @@ local DailyTasks = Class(function(self, inst)
             end,
             reward_description = function()
                 local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
-                return DAILYTASKS.CONFIG.LANGUAGE == "en"
-                    and count .. " meat"
-                    or count .. "个肉"
+                return DAILYTASKS.Translate(count .. "个肉")
             end
         },
         {
@@ -125,9 +125,7 @@ local DailyTasks = Class(function(self, inst)
             end,
             description = function() 
                 local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
-                return DAILYTASKS.CONFIG.LANGUAGE == "en"
-                    and "Collect " .. count .. " carrots"
-                    or "采集" .. count .. "个胡萝卜" 
+                return DAILYTASKS.Translate("采集" .. count .. "个胡萝卜")
             end,
             check = function(player) 
                 local required = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
@@ -151,17 +149,15 @@ local DailyTasks = Class(function(self, inst)
             end,
             reward = function(player) 
                 if player.components.inventory then
-                    local count = math.ceil(1 * self.config.REWARD_MULTIPLIER)
+                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
                     for i=1, count do
-                        player.components.inventory:GiveItem(SpawnPrefab("meat"))
+                        player.components.inventory:GiveItem(SpawnPrefab("papyrus"))
                     end
                 end
             end,
             reward_description = function()
-                local count = math.ceil(1 * self.config.REWARD_MULTIPLIER)
-                return DAILYTASKS.CONFIG.LANGUAGE == "en"
-                    and count .. " meat"
-                    or count .. "个肉"
+                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                return DAILYTASKS.Translate(count .. "个莎草纸")
             end
         },
         {
