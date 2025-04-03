@@ -86,7 +86,9 @@ local DailyTasks = Class(function(self, inst)
             end,
             description = function() 
                 local count = math.ceil(10 * self.config.DIFFICULTY_MULTIPLIER)
-                return DAILYTASKS.Translate("采集" .. count .. "个浆果")
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"
+                    and "Collect " .. count .. " berries"
+                    or "采集" .. count .. "个浆果" 
             end,
             check = function(player)
                 local required = math.ceil(10 * self.config.DIFFICULTY_MULTIPLIER)
@@ -114,50 +116,9 @@ local DailyTasks = Class(function(self, inst)
             end,
             reward_description = function()
                 local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
-                return DAILYTASKS.Translate(count .. "个肉")
-            end
-        },
-        {
-            name = function() 
-                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
-                    and "Carrot Gathering" 
-                    or "采集胡萝卜任务"
-            end,
-            description = function() 
-                local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
-                return DAILYTASKS.Translate("采集" .. count .. "个胡萝卜")
-            end,
-            check = function(player) 
-                local required = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
-                if player.components.inventory then
-                    local count = 0
-                    local items = player.components.inventory:FindItems(function(item) 
-                        return item.prefab == "carrot" or item.prefab == "carrot_cooked"
-                    end)
-                    
-                    for _, item in ipairs(items) do
-                        if item.components.stackable then
-                            count = count + item.components.stackable:StackSize()
-                        else
-                            count = count + 1
-                        end
-                    end
-                    
-                    return count >= required
-                end
-                return false
-            end,
-            reward = function(player) 
-                if player.components.inventory then
-                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
-                    for i=1, count do
-                        player.components.inventory:GiveItem(SpawnPrefab("papyrus"))
-                    end
-                end
-            end,
-            reward_description = function()
-                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
-                return DAILYTASKS.Translate(count .. "个莎草纸")
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"
+                    and count .. " meat"
+                    or count .. "个肉"
             end
         },
         {
@@ -208,7 +169,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "采集蘑菇任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Mushroom Gathering" 
+                    or "采集蘑菇任务"
+            end,
             description = function() 
                 local count = math.ceil(4 * self.config.DIFFICULTY_MULTIPLIER)
                 return "采集" .. count .. "个蘑菇(任意种类)" 
@@ -248,30 +213,11 @@ local DailyTasks = Class(function(self, inst)
         
         -- 狩猎任务
         {
-            name = "狩猎兔子任务",
-            description = function() 
-                local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
-                return "杀死" .. count .. "只兔子" 
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Spider Hunting" 
+                    or "狩猎蜘蛛任务"
             end,
-            check = function(player)
-                local required = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
-                return player.daily_kills and player.daily_kills.rabbit and player.daily_kills.rabbit >= required
-            end,
-            reward = function(player)
-                if player.components.inventory then
-                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
-                    for i=1, count do
-                        player.components.inventory:GiveItem(SpawnPrefab("meat"))
-                    end
-                end
-            end,
-            reward_description = function()
-                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
-                return count .. "个肉"
-            end
-        },
-        {
-            name = "狩猎蜘蛛任务",
             description = function() 
                 local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "只蜘蛛" 
@@ -303,7 +249,38 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "狩猎猪人任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Rabbit Hunting" 
+                    or "狩猎兔子任务"
+            end,
+            description = function() 
+                local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
+                return "杀死" .. count .. "只兔子" 
+            end,
+            check = function(player)
+                local required = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
+                return player.daily_kills and player.daily_kills.rabbit and player.daily_kills.rabbit >= required
+            end,
+            reward = function(player)
+                if player.components.inventory then
+                    local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                    for i=1, count do
+                        player.components.inventory:GiveItem(SpawnPrefab("meat"))
+                    end
+                end
+            end,
+            reward_description = function()
+                local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
+                return count .. "个肉"
+            end
+        },
+        {
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Pigman Hunting" 
+                    or "狩猎猪人任务"
+            end,
             description = function() 
                 local count = math.ceil(1 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "只猪人" 
@@ -326,7 +303,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "狩猎蜜蜂任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Bee Hunting" 
+                    or "狩猎蜜蜂任务"
+            end,
             description = function() 
                 local count = math.ceil(5 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "只蜜蜂" 
@@ -360,7 +341,11 @@ local DailyTasks = Class(function(self, inst)
         
         -- 采矿任务
         {
-            name = "采矿任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Rock Mining" 
+                    or "采集石头任务"
+            end,
             description = function() 
                 local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
                 return "开采" .. count .. "块石头" 
@@ -383,7 +368,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "采金矿石任务（只包含主世界金矿石）",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Gold Mining" 
+                    or "采集金矿石任务"
+            end,
             description = function() 
                 local count = math.ceil(1 * self.config.DIFFICULTY_MULTIPLIER)
                 return "挖掘" .. count .. "个金矿石" 
@@ -405,7 +394,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "采集大理石任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Marble Mining" 
+                    or "采集大理石任务"
+            end,
             description = function() 
                 local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
                 return "开采" .. count .. "块大理石" 
@@ -430,7 +423,11 @@ local DailyTasks = Class(function(self, inst)
         
         -- 钓鱼任务
         {
-            name = "钓鱼任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Fishing" 
+                    or "钓鱼任务"
+            end,
             description = function() 
                 local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
                 return "钓上" .. count .. "条鱼" 
@@ -453,7 +450,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "钓大鱼任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Big Fish Hunting" 
+                    or "钓大鱼任务"
+            end,
             description = function() 
                 local count = math.ceil(1 * self.config.DIFFICULTY_MULTIPLIER)
                 return "钓" .. count .. "条大鱼" 
@@ -475,7 +476,11 @@ local DailyTasks = Class(function(self, inst)
         
         -- 生存任务
         {
-            name = "生存任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Survival" 
+                    or "生存任务"
+            end,
             description = function() 
                 local days = math.ceil(1 * self.config.DIFFICULTY_MULTIPLIER)
                 return "存活" .. days .. "天" 
@@ -498,8 +503,14 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "保持健康任务",
-            description = "保持健康状态一整天",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Health Maintenance" 
+                    or "保持健康任务"
+            end,
+            description = function()
+                return "保持健康状态一整天"
+            end,
             check = function(player)
                 if player.components.health then
                     return player.components.health:GetPercent() > 0.8
@@ -514,8 +525,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "1个生命注射器"
         },
         {
-            name = "保持理智任务",
-            description = "保持理智状态一整天",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Sanity Maintenance" 
+                    or "保持理智任务"
+            end,
+            description = function()
+                return "保持理智状态一整天"
+            end,
             check = function(player)
                 if player.components.sanity then
                     return player.components.sanity:GetPercent() > 0.8
@@ -531,8 +548,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "2个噩梦燃料"
         },
         {
-            name = "保持饱腹任务",
-            description = "保持饱腹状态一整天",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"       
+                    and "Satiety Maintenance" 
+                    or "保持饱腹任务"
+            end,
+            description = function()
+                return "保持饱腹状态一整天"
+            end,
             check = function(player)
                 if player.components.hunger then
                     return player.components.hunger:GetPercent() > 0.8
@@ -547,7 +570,11 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "1个培根煎蛋"
         },
         {
-            name = "采集花朵任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Flower Gathering" 
+                    or "采集花朵任务"
+            end,    
             description = function() 
                 local count = math.ceil(6 * self.config.DIFFICULTY_MULTIPLIER)
                 return "采集" .. count .. "朵花" 
@@ -586,7 +613,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "采集蜂蜜任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Honey Gathering" 
+                    or "采集蜂蜜任务"
+            end,    
             description = function() 
                 local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
                 return "采集" .. count .. "份蜂蜜" 
@@ -622,7 +653,11 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "1个太妃糖"
         },
         {
-            name = "采集树枝任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Tree Branch Gathering" 
+                    or "采集树枝任务"
+            end,        
             description = function() 
                 local count = math.ceil(15 * self.config.DIFFICULTY_MULTIPLIER)
                 return "采集" .. count .. "个树枝" 
@@ -661,7 +696,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "狩猎青蛙任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Frog Hunting" 
+                    or "狩猎青蛙任务"
+            end,
             description = function() 
                 local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "只青蛙" 
@@ -684,7 +723,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "狩猎浣熊任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Raccoon Hunting" 
+                    or "狩猎浣熊任务"
+            end,    
             description = function() 
                 local count = math.ceil(1 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "只浣熊" 
@@ -707,8 +750,14 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "击败高鸟任务",
-            description = "击败一只高脚鸟",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Tallbird Hunting" 
+                    or "击败高鸟任务"
+            end,    
+            description = function()
+                return "击败一只高脚鸟"
+            end,
             check = function(player)
                 return player.daily_kills and player.daily_kills.tallbird and player.daily_kills.tallbird >= 1
             end,
@@ -726,7 +775,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "狩猎触手任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Tentacle Hunting" 
+                    or "狩猎触手任务"
+            end,        
             description = function() 
                 local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "个触手" 
@@ -749,7 +802,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "采集硝石任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE ==    "en"   
+                    and "Nitre Gathering" 
+                    or "采集硝石任务"
+            end,        
             description = function() 
                 local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
                 return "采集" .. count .. "个硝石" 
@@ -788,7 +845,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "采集燧石任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Flint Gathering" 
+                    or "采集燧石任务"
+            end ,        
             description = function() 
                 local count = math.ceil(8 * self.config.DIFFICULTY_MULTIPLIER)
                 return "采集" .. count .. "个燧石" 
@@ -827,7 +888,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "采冰任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Ice Gathering" 
+                    or "采冰任务"
+            end,        
             description = function() 
                 local count = math.ceil(6 * self.config.DIFFICULTY_MULTIPLIER)
                 return "采集" .. count .. "块冰" 
@@ -870,7 +935,11 @@ local DailyTasks = Class(function(self, inst)
             season_hint = "只能在冬季完成"  -- 添加季节提示
         },
         {
-            name = "海钓任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Ocean Fishing" 
+                    or "海钓任务"
+            end,        
             description = function() 
                 local count = math.ceil(1 * self.config.DIFFICULTY_MULTIPLIER)
                 return "在海边钓到" .. count .. "条鱼" 
@@ -890,7 +959,11 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "1个海鲜牛排"
         },
         {
-            name = "狩猎兔人任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Bunnyman Hunting" 
+                    or "狩猎兔人任务"
+            end ,
             description = function() 
                 local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "个兔人" 
@@ -914,7 +987,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "狩猎鱼人任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Merm Hunting" 
+                    or "狩猎鱼人任务"
+            end,
             description = function() 
                 local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "个鱼人" 
@@ -937,7 +1014,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "狩猎海象任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Walrus Hunting" 
+                    or "狩猎海象任务"
+            end,
             description = function() 
                 local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "只海象" 
@@ -962,7 +1043,11 @@ local DailyTasks = Class(function(self, inst)
             season_hint = "冬季出没"
         },
         {
-            name = "狩猎发条骑士任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Clockwork Knight Hunting" 
+                    or "狩猎发条骑士任务"
+            end,
             description = function() 
                 local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "个发条骑士" 
@@ -985,7 +1070,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "狩猎火鸡任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Chicken Hunting" 
+                    or "狩猎火鸡任务"
+            end,    
             description = function() 
                 local count = math.ceil(4 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "只火鸡" 
@@ -1008,7 +1097,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "狩猎鼹鼠任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Mole Hunting" 
+                    or "狩猎鼹鼠任务"
+            end,    
             description = function() 
                 local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "只鼹鼠" 
@@ -1031,7 +1124,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "狩猎皮弗娄牛任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Beefalo Hunting" 
+                    or "狩猎皮弗娄牛任务"
+            end,    
             description = function() 
                 local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "只皮弗娄牛" 
@@ -1055,7 +1152,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "狩猎蜘蛛战士任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Spider Warrior Hunting" 
+                    or "狩猎蜘蛛战士任务"
+            end,
             description = function() 
                 local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "只蜘蛛战士" 
@@ -1079,7 +1180,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "狩猎猎犬任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Hound Hunting" 
+                    or "狩猎猎犬任务"
+            end,
             description = function() 
                 local count = math.ceil(3 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "只猎犬" 
@@ -1102,7 +1207,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "狩猎蓝色猎犬任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Blue Hound Hunting" 
+                    or "狩猎蓝色猎犬任务"
+            end,    
             description = function() 
                 local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "只蓝色猎犬" 
@@ -1126,7 +1235,11 @@ local DailyTasks = Class(function(self, inst)
             season_hint = "冬季出没"
         },
         {
-            name = "狩猎红色猎犬任务",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Red Hound Hunting" 
+                    or "狩猎红色猎犬任务"
+            end,
             description = function() 
                 local count = math.ceil(2 * self.config.DIFFICULTY_MULTIPLIER)
                 return "杀死" .. count .. "只红色猎犬" 
@@ -1150,7 +1263,11 @@ local DailyTasks = Class(function(self, inst)
             season_hint = "夏季出没"
         },
         {
-            name = "制作长矛任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Spear" 
+                    or "制作长矛任务"
+            end,
             description = function() 
                 return "制作1个长矛" 
             end,
@@ -1177,7 +1294,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作火腿棒任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Hambat" 
+                    or "制作火腿棒任务"
+            end,
             description = function() 
                 return "制作1个火腿棒" 
             end,
@@ -1204,7 +1325,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作暗夜剑任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Nightsword" 
+                    or "制作暗夜剑任务"
+            end,
             description = function() 
                 return "制作1个暗夜剑" 
             end,
@@ -1231,7 +1356,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作排箫任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Panflute" 
+                    or "制作排箫任务"
+            end,
             description = function() 
                 return "制作1个排箫" 
             end,
@@ -1258,7 +1387,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作火魔杖任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Firestaff" 
+                    or "制作火魔杖任务"
+            end,
             description = function() 
                 return "制作1个火魔杖" 
             end,
@@ -1285,7 +1418,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作冰魔杖任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Icestaff" 
+                    or "制作冰魔杖任务"
+            end,
             description = function() 
                 return "制作1个冰魔杖" 
             end,
@@ -1312,7 +1449,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作铥矿棒任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Thulecite Staff" 
+                    or "制作铥矿棒任务"
+            end,
             description = function() 
                 return "制作1个铥矿棒" 
             end,
@@ -1339,7 +1480,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作唤星者魔杖任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Yellowstaff" 
+                    or "制作唤星者魔杖任务"
+            end,
             description = function() 
                 return "制作1个唤星者魔杖" 
             end,
@@ -1366,7 +1511,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作懒人魔杖任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Orangestaff" 
+                    or "制作懒人魔杖任务"
+            end,
             description = function() 
                 return "制作1个懒人魔杖" 
             end,
@@ -1393,7 +1542,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作玻璃刀任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Glasscutter" 
+                    or "制作玻璃刀任务"
+            end,
             description = function() 
                 return "制作1个玻璃刀" 
             end,
@@ -1420,7 +1573,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作木甲任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Armorwood" 
+                    or "制作木甲任务"
+            end,
             description = function() 
                 return "制作1个木甲" 
             end,
@@ -1447,7 +1604,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作暗夜甲任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Armor_Sanity" 
+                    or "制作暗夜甲任务"
+            end,
             description = function() 
                 return "制作1个暗夜甲" 
             end,
@@ -1474,7 +1635,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作大理石甲任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Armormarble" 
+                    or "制作大理石甲任务"
+            end,
             description = function() 
                 return "制作1个大理石甲" 
             end,
@@ -1501,7 +1666,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作绝望石盔甲任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Armorruins" 
+                    or "制作绝望石盔甲任务"
+            end,
             description = function() 
                 return "制作1个绝望石盔甲" 
             end,
@@ -1528,14 +1697,18 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作橄榄球头盔任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Pigskin" 
+                    or "制作橄榄球头盔任务"
+            end,
             description = function() 
                 return "制作1个橄榄球头盔" 
             end,
             check = function(player)
                 if player.components.inventory then
                     local items = player.components.inventory:FindItems(function(item) 
-                        return item.prefab == "footballhat"
+                        return item.prefab == "pigskin"
                     end)
                     return #items > 0
                 end
@@ -1555,7 +1728,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作养蜂帽任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Beehat" 
+                    or "制作养蜂帽任务"
+            end,
             description = function() 
                 return "制作1个养蜂帽" 
             end,
@@ -1582,7 +1759,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作背包任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Backpack" 
+                    or "制作背包任务"
+            end,
             description = function() 
                 return "制作1个背包" 
             end,
@@ -1609,7 +1790,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作雨伞任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Umbrella" 
+                    or "制作雨伞任务"
+            end,
             description = function() 
                 return "制作1个雨伞" 
             end,
@@ -1636,7 +1821,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作羽毛扇任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Featherfan" 
+                    or "制作羽毛扇任务"
+            end,
             description = function() 
                 return "制作1个羽毛扇" 
             end,
@@ -1663,7 +1852,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作花环任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Flowerhat" 
+                    or "制作花环任务"
+            end,
             description = function() 
                 return "制作1个花环" 
             end,
@@ -1690,7 +1883,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作草帽任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Strawhat" 
+                    or "制作草帽任务"
+            end,
             description = function() 
                 return "制作1个草帽" 
             end,
@@ -1717,7 +1914,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作高礼帽任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Tophat" 
+                    or "制作高礼帽任务"
+            end,
             description = function() 
                 return "制作1个高礼帽" 
             end,
@@ -1744,7 +1945,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作冬帽任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Winterhat" 
+                    or "制作冬帽任务"
+            end,
             description = function() 
                 return "制作1个冬帽" 
             end,
@@ -1771,7 +1976,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作牛角帽任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Beefalohat" 
+                    or "制作牛角帽任务"
+            end,
             description = function() 
                 return "制作1个牛角帽" 
             end,
@@ -1798,7 +2007,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作步行手杖任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Cane" 
+                    or "制作步行手杖任务"
+            end,
             description = function() 
                 return "制作1个步行手杖" 
             end,
@@ -1825,7 +2038,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作黄金斧头任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Goldenaxe" 
+                    or "制作黄金斧头任务"
+            end,
             description = function() 
                 return "制作1个黄金斧头" 
             end,
@@ -1852,7 +2069,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作黄金鹤嘴锄任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Goldenpickaxe" 
+                    or "制作黄金鹤嘴锄任务"
+            end,
             description = function() 
                 return "制作1个黄金鹤嘴锄" 
             end,
@@ -1879,7 +2100,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作黄金铲子任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Goldenshovel" 
+                    or "制作黄金铲子任务"
+            end,
             description = function() 
                 return "制作1个黄金铲子" 
             end,
@@ -1906,7 +2131,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作黄金园艺锄任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Golden_Farm_Hoe" 
+                    or "制作黄金园艺锄任务"
+            end,
             description = function() 
                 return "制作1个黄金园艺锄" 
             end,
@@ -1933,7 +2162,11 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "制作黄金干草叉任务",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Craft Goldenpitchfork" 
+                    or "制作黄金干草叉任务"
+            end,
             description = function() 
                 return "制作1个黄金干草叉" 
             end,
@@ -1960,8 +2193,14 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "超级马里奥挑战",
-            description = "戴着红色蘑菇帽击杀蘑菇地精(mushgnome)",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Super Mario Challenge" 
+                    or "超级马里奥挑战"
+            end,
+            description = function() 
+                return "戴着红色蘑菇帽击杀蘑菇地精(mushgnome)"
+            end,
             check = function(player)
                 -- 检查是否戴着红色蘑菇帽
                 local hat = player.components.inventory:GetEquippedItem(EQUIPSLOTS.HEAD)
@@ -1983,8 +2222,14 @@ local DailyTasks = Class(function(self, inst)
             special = true
         },
         {
-            name = "Among Us 厨房危机",
-            description = "给队友喂食怪物千层饼",
+            name = function() 
+                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
+                    and "Among Us Kitchen Crisis" 
+                    or "Among Us 厨房危机"
+            end,
+            description = function() 
+                return "给队友喂食怪物千层饼"
+            end,
             check = function(player)
                 return player.among_us_feeds and player.among_us_feeds >= 1
             end,
@@ -2009,8 +2254,14 @@ local DailyTasks = Class(function(self, inst)
             special = true
         },
         {
-            name = "社恐波奇酱",
-            description = "保持独处4小时",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Social Anxiety Challenge" 
+                    or "社恐波奇酱"
+            end,
+            description = function()
+                return "保持独处4小时"
+            end,
             check = function(player)
                 return player.social_anxiety_time and player.social_anxiety_time >= 240 -- 4小时 = 240分钟
             end,
@@ -2046,8 +2297,14 @@ local DailyTasks = Class(function(self, inst)
             special = true
         },
         {
-            name = "恐怖游轮循环",
-            description = "完成死亡复仇循环",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Curse of the Loop" 
+                    or "恐怖游轮循环"
+            end,    
+            description = function()
+                return "完成死亡复仇循环"
+            end,
             check = function(player)
                 return player.curse_cycle_completed
             end,
@@ -2081,8 +2338,14 @@ local DailyTasks = Class(function(self, inst)
             special = true
         },
         {
-            name = "咩咩羊启示录",
-            description = "封你为神 - 拥有20个信徒(被驯服的猪人、兔人、鱼人)",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"       
+                    and "Sheep Revelation" 
+                    or "咩咩羊启示录"
+            end,
+            description = function()
+                return "封你为神 - 拥有20个信徒(被驯服的猪人、兔人、鱼人)"
+            end,
             check = function(player)
                 -- 检查是否拥有足够的信徒
                 local follower_count = 0
@@ -2224,8 +2487,14 @@ local DailyTasks = Class(function(self, inst)
             end
         },
         {
-            name = "工匠大师",
-            description = "在一天内制作10件不同的物品",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Craftsman Master" 
+                    or "工匠大师"
+            end,    
+            description = function()
+                return "在一天内制作10件不同的物品"
+            end,
             check = function(player)
                 return player.daily_crafted_items and #player.daily_crafted_items >= 10
             end,
@@ -2267,8 +2536,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "2个金块、1个木板、1个石砖，以及8分钟的制作材料减少(25%)"
         },
         {
-            name = "资源收集者",
-            description = "在一天内收集50个基础资源(树枝/草/石头/木头)",
+            name = function()
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"       
+                    and "Resource Collector" 
+                    or "资源收集者"
+            end,
+            description = function()
+                return "在一天内收集20个基础资源(树枝/草/石头/木头)"
+            end,
             check = function(player)
                 local count = 0
                 if player.daily_resources_collected then
@@ -2276,7 +2551,7 @@ local DailyTasks = Class(function(self, inst)
                         count = count + amount
                     end
                 end
-                return count >= 50
+                return count >= 20
             end,
             start = function(player)
                 player.daily_resources_collected = {
@@ -2317,8 +2592,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "1个背包，以及5分钟的采集速度提升(+50%)"
         },
         {
-            name = "钓鱼大师",
-            description = "在一天内钓上5条鱼",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Fishing Master" 
+                    or "钓鱼大师"
+            end,
+            description = function()
+                return "在一天内钓上5条鱼"
+            end,
             check = function(player)
                 return player.daily_fish_caught and player.daily_fish_caught >= 5
             end,
@@ -2348,8 +2629,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "3个鱼肉，以及8分钟的钓鱼效率提升(+100%)"
         },
         {
-            name = "家园设计师",
-            description = "在一天内收集5种不同的墙体材料",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Home Designer" 
+                    or "家园设计师"
+            end,
+            description = function()
+                return "在一天内收集5种不同的墙体材料"
+            end,
             check = function(player)
                 if not player.components.inventory then return false end
                 
@@ -2394,8 +2681,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "5个石墙，以及6分钟的建造速度提升(+100%)"
         },
         {
-            name = "室内装饰师",
-            description = "在一天内收集3种不同的家具物品",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Interior Decorator" 
+                    or "室内装饰师" 
+            end,
+            description = function()
+                return "在一天内收集3种不同的家具物品"
+            end,
             check = function(player)
                 if not player.components.inventory then return false end
                 
@@ -2443,8 +2736,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "1个盆栽蕨类、1个木牌，以及8分钟的负面精神光环减少(50%)"
         },
         {
-            name = "灯光设计师",
-            description = "在一天内收集3种不同的照明物品",
+            name = function()       
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Lighting Designer" 
+                    or "灯光设计师"
+            end,
+            description = function()
+                return "在一天内收集3种不同的照明物品"
+            end,
             check = function(player)
                 if not player.components.inventory then return false end
                 
@@ -2483,8 +2782,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "1个提灯，以及6分钟的夜视能力"
         },
         {
-            name = "救援专家",
-            description = "在一天内复活1名队友",
+            name = function()       
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Rescue Expert" 
+                    or "救援专家"
+            end,
+            description = function()
+                return "在一天内复活1名队友"
+            end,
             check = function(player)
                 return player.daily_revives and player.daily_revives >= 1
             end,
@@ -2514,8 +2819,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "1个生命护符，以及8分钟的生命上限提升(+25%)"
         },
         {
-            name = "慷慨的厨师",
-            description = "在一天内给其他玩家提供5次食物",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Generous Chef" 
+                    or "慷慨的厨师" 
+            end,
+            description = function()
+                return "在一天内给其他玩家提供5次食物"
+            end,
             check = function(player)
                 return player.daily_food_given and player.daily_food_given >= 5
             end,
@@ -2548,8 +2859,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "1本食谱、1块黄油，以及8分钟的烹饪时间减少(50%)"
         },
         {
-            name = "建筑大师",
-            description = "在一天内建造3种不同的建筑物",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Building Master" 
+                    or "建筑大师"   
+            end,
+            description = function()
+                return "在一天内建造3种不同的建筑物"
+            end,
             check = function(player)
                 return player.daily_structures_built and #player.daily_structures_built >= 3
             end,
@@ -2584,8 +2901,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "2个木板、2个石砖，以及6分钟的建造速度提升(+100%)"
         },
         {
-            name = "团队治疗师",
-            description = "在一天内治疗队友总计100点生命值",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Team Healer" 
+                    or "团队治疗师" 
+            end,
+            description = function()
+                return "在一天内治疗队友总计100点生命值"
+            end,
             check = function(player)
                 return player.daily_healing_done and player.daily_healing_done >= 100
             end,
@@ -2624,8 +2947,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "2个治疗药膏、1个生命注射器，以及8分钟的治疗效果提升(+20点)"
         },
         {
-            name = "简单采集",
-            description = "采集5个树枝",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Simple Gathering" 
+                    or "简单采集"   
+            end,
+            description = function()
+                return "采集5个树枝"
+            end,
             check = function(player)
                 if not player.components.inventory then return false end
                 local count = CountPlayerItems(player, "twigs")
@@ -2640,8 +2969,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "2个金块"
         },
         {
-            name = "简单制作",
-            description = "制作1个工具",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Simple Crafting" 
+                    or "简单制作"       
+            end,
+            description = function()
+                return "制作1个工具"
+            end,
             check = function(player)
                 return player.daily_tools_crafted and player.daily_tools_crafted >= 1
             end,
@@ -2669,8 +3004,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "2个燧石和2个树枝"
         },
         {
-            name = "裸奔挑战",
-            description = "不穿任何装备跑步5分钟",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Naked Running Challenge" 
+                    or "裸奔挑战"       
+            end,
+            description = function()
+                return "不穿任何装备跑步5分钟"
+            end,
             check = function(player)
                 return player.daily_naked_running and player.daily_naked_running >= 300 -- 10分钟 = 600秒
             end,
@@ -2711,8 +3052,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "1个木甲、1个橄榄球头盔、1个背包"
         },
         {
-            name = "猪人派对",
-            description = "让5只猪人同时跟随你",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Pig Party" 
+                    or "猪人派对"   
+            end,
+            description = function()
+                return "让5只猪人同时跟随你"
+            end,
             check = function(player)
                 local followers = 0
                 for k,v in pairs(player.components.leader.followers) do
@@ -2736,8 +3083,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "5个猪皮、3个肉"
         },
         {
-            name = "疯狂钓鱼佬",
-            description = "连续钓鱼5分钟不做其他事",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Crazy Fishing" 
+                    or "疯狂钓鱼佬"         
+            end,
+            description = function()
+                return "连续钓鱼5分钟不做其他事"
+            end,
             check = function(player)
                 return player.daily_fishing_streak and player.daily_fishing_streak >= 5 -- 15分钟
             end,
@@ -2775,8 +3128,14 @@ local DailyTasks = Class(function(self, inst)
             difficulty = "medium"
         },
         {
-            name = "熊孩子",
-            description = "破坏5个蜘蛛网、兔子洞或蜜蜂窝",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Bear Kid" 
+                    or "熊孩子"   
+            end,
+            description = function()
+                return "破坏5个蜘蛛网、兔子洞或蜜蜂窝"
+            end,
             check = function(player)
                 return player.daily_destroyed_homes and player.daily_destroyed_homes >= 5
             end,
@@ -2809,8 +3168,14 @@ local DailyTasks = Class(function(self, inst)
             reward_description = "1个橄榄球头盔、5个糖果"
         },
         {
-            name = "无敌挑战者",
-            description = "在一天内不受到任何伤害",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Invincible Challenge" 
+                    or "无敌挑战者"     
+            end,
+            description = function()
+                return "在一天内不受到任何伤害"
+            end,
             check = function(player)
                 return player.daily_no_damage_challenge and player.daily_no_damage_challenge
             end,
@@ -2843,8 +3208,14 @@ local DailyTasks = Class(function(self, inst)
             difficulty = "hard"
         },
         {
-            name = "疯狂科学家",
-            description = "在一天内制作15种不同的科技物品",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Crazy Scientist" 
+                    or "疯狂科学家"     
+            end,
+            description = function()
+                return "在一天内制作15种不同的科技物品"
+            end,
             check = function(player)
                 return player.daily_tech_crafted and #player.daily_tech_crafted >= 15
             end,
@@ -2893,8 +3264,14 @@ local DailyTasks = Class(function(self, inst)
             difficulty = "hard"
         },
         {
-            name = "暗影征服者",
-            description = "在一天内击杀5个暗影生物",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Shadow Conqueror" 
+                    or "暗影征服者"     
+            end,
+            description = function()
+                return "在一天内击杀5个暗影生物"
+            end,
             check = function(player)
                 local shadow_kills = 0
                 if player.daily_kills then
@@ -2936,8 +3313,14 @@ local DailyTasks = Class(function(self, inst)
             difficulty = "hard"
         },
         {
-            name = "巨人杀手",
-            description = "在一天内单独击杀一个季节BOSS",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Giant Killer" 
+                    or "巨人杀手"       
+            end,
+            description = function()
+                return "在一天内单独击杀一个季节BOSS"
+            end,
             check = function(player)
                 local boss_killed = false
                 if player.daily_boss_solo_kills then
@@ -2994,8 +3377,14 @@ local DailyTasks = Class(function(self, inst)
             difficulty = "hard"
         },
         {
-            name = "月光舞者",
-            description = "在满月夜晚不使用任何光源生存整晚",
+            name = function()   
+                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
+                    and "Moonlight Dancer" 
+                    or "月光舞者"     
+            end,
+            description = function()
+                return "在满月夜晚不使用任何光源生存整晚"
+            end,
             check = function(player)
                 return player.daily_moonlight_survived
             end,
@@ -3065,7 +3454,7 @@ local DailyTasks = Class(function(self, inst)
         -- 添加新的制作物品任务
         -- 唤星者魔杖
         CreateCraftingTask(
-            "唤星者魔杖", 
+            "Star Caller's Staff", 
             "orangestaff", 
             1, 
             function(player)
@@ -3075,13 +3464,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "1个紫宝石和2个噩梦燃料",
+            "1 Purple Gem and 2 Nightmare Fuel",
             "hard"
         ),
 
         -- 懒人魔杖
         CreateCraftingTask(
-            "懒人魔杖", 
+            "Lazy Explorer", 
             "yellowstaff", 
             1, 
             function(player)
@@ -3091,13 +3480,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "1个黄宝石和2个噩梦燃料",
+            "1 Yellow Gem and 2 Nightmare Fuel",
             "hard"
         ),
 
         -- 拆解魔杖
         CreateCraftingTask(
-            "拆解魔杖", 
+            "Deconstruction Staff", 
             "greenstaff", 
             1, 
             function(player)
@@ -3107,13 +3496,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "1个绿宝石和2个噩梦燃料",
+            "1 Green Gem and 2 Nightmare Fuel",
             "hard"
         ),
 
         -- 多用斧镐
         CreateCraftingTask(
-            "多用斧镐", 
+            "Multitool Pick/Axe", 
             "multitool_axe_pickaxe", 
             1, 
             function(player)
@@ -3124,13 +3513,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("twigs"))
                 end
             end,
-            "2个金块和2个树枝",
+            "2 Gold Nuggets and 2 Twigs",
             "medium"
         ),
 
         -- 高级耕作先驱帽
         CreateCraftingTask(
-            "高级耕作先驱帽", 
+            "Soil Enhancement Hat", 
             "hat_soil", 
             1, 
             function(player)
@@ -3139,13 +3528,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("soil_amender"))
                 end
             end,
-            "2个堆肥",
+            "2 Soil Amenders",
             "medium"
         ),
 
         -- 铥矿皇冠
         CreateCraftingTask(
-            "铥矿皇冠", 
+            "Thulecite Crown", 
             "ruinshat", 
             1, 
             function(player)
@@ -3156,13 +3545,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "2个铥矿和2个噩梦燃料",
+            "2 Thulecite and 2 Nightmare Fuel",
             "hard"
         ),
 
         -- 铥矿甲
         CreateCraftingTask(
-            "铥矿甲", 
+            "Thulecite Suit", 
             "armorruins", 
             1, 
             function(player)
@@ -3173,13 +3562,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "2个铥矿和2个噩梦燃料",
+            "2 Thulecite and 2 Nightmare Fuel",
             "hard"
         ),
 
         -- 铥矿棒
         CreateCraftingTask(
-            "铥矿棒", 
+            "Thulecite Club", 
             "ruins_bat", 
             1, 
             function(player)
@@ -3190,13 +3579,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "2个铥矿和2个噩梦燃料",
+            "2 Thulecite and 2 Nightmare Fuel",
             "hard"
         ),
 
         -- 铥墙
         CreateCraftingTask(
-            "铥墙", 
+            "Thulecite Wall", 
             "wall_ruins_item", 
             4, 
             function(player)
@@ -3205,13 +3594,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("thulecite"))
                 end
             end,
-            "2个铥矿",
+            "2 Thulecite",
             "medium"
         ),
 
         -- 铥矿徽章
         CreateCraftingTask(
-            "铥矿徽章", 
+            "Thulecite Medallion", 
             "thulecite_medallion", 
             1, 
             function(player)
@@ -3222,13 +3611,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "2个铥矿碎片和2个噩梦燃料",
+            "2 Thulecite Fragments and 2 Nightmare Fuel",
             "medium"
         ),
 
         -- 懒人护符
         CreateCraftingTask(
-            "懒人护符", 
+            "Lazy Amulet", 
             "orangeamulet", 
             1, 
             function(player)
@@ -3238,13 +3627,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "1个橙宝石和2个噩梦燃料",
+            "1 Orange Gem and 2 Nightmare Fuel",
             "hard"
         ),
 
         -- 魔光护符
         CreateCraftingTask(
-            "魔光护符", 
+            "Yellow Amulet", 
             "yellowamulet", 
             1, 
             function(player)
@@ -3254,13 +3643,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "1个黄宝石和2个噩梦燃料",
+            "1 Yellow Gem and 2 Nightmare Fuel",
             "hard"
         ),
 
         -- 建造护符
         CreateCraftingTask(
-            "建造护符", 
+            "Green Amulet", 
             "greenamulet", 
             1, 
             function(player)
@@ -3270,13 +3659,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "1个绿宝石和2个噩梦燃料",
+            "1 Green Gem and 2 Nightmare Fuel",
             "hard"
         ),
 
         -- 眼睛炮塔
         CreateCraftingTask(
-            "眼睛炮塔", 
+            "Deerclops Eyeball", 
             "eyeturret_item", 
             1, 
             function(player)
@@ -3285,13 +3674,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("minotaurhorn"))
                 end
             end,
-            "1个独眼巨鹿眼球和1个远古守护者角",
+            "1 Deerclops Eyeball and 1 Minotaur Horn",
             "hard"
         ),
 
         -- 虚空长袍
         CreateCraftingTask(
-            "虚空长袍", 
+            "Void Cloth", 
             "armor_voidcloth", 
             1, 
             function(player)
@@ -3300,13 +3689,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("voidcloth"))
                 end
             end,
-            "2个虚空布料",
+            "2 Void Cloth",
             "hard"
         ),
 
         -- 虚空风帽
         CreateCraftingTask(
-            "虚空风帽", 
+            "Void Cloth Hat", 
             "hat_voidcloth", 
             1, 
             function(player)
@@ -3315,13 +3704,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("voidcloth"))
                 end
             end,
-            "2个虚空布料",
+            "2 Void Cloth",
             "hard"
         ),
 
         -- 暗影伞
         CreateCraftingTask(
-            "暗影伞", 
+            "Shadow Tentacle", 
             "shadowtentacle", 
             1, 
             function(player)
@@ -3331,13 +3720,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "3个噩梦燃料",
+            "3 Nightmare Fuel",
             "medium"
         ),
 
         -- 暗影槌
         CreateCraftingTask(
-            "暗影槌", 
+            "Lightning Goat Horn", 
             "nightstick", 
             1, 
             function(player)
@@ -3346,13 +3735,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("lightninggoathorn"))
                 end
             end,
-            "2个闪电羊角",
+            "2 Lightning Goat Horns",
             "medium"
         ),
 
         -- 玻璃刀
         CreateCraftingTask(
-            "玻璃刀", 
+            "Moon Glass", 
             "glasscutter", 
             1, 
             function(player)
@@ -3362,13 +3751,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("moonglass"))
                 end
             end,
-            "3个月亮碎片",
+            "3 Moon Fragments",
             "medium"
         ),
         
         -- 月光玻璃斧
         CreateCraftingTask(
-            "月光玻璃斧", 
+            "Moon Glass Axe", 
             "moonglassaxe", 
             1, 
             function(player)
@@ -3378,13 +3767,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("moonglass"))
                 end
             end,
-            "3个月亮碎片",
+            "3 Moon Fragments",
             "medium"
         ),
         
         -- 月亮蘑菇帽
         CreateCraftingTask(
-            "月亮蘑菇帽", 
+            "Moon Cap", 
             "hat_mushroom", 
             1, 
             function(player)
@@ -3393,13 +3782,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("moon_cap"))
                 end
             end,
-            "2个月亮蘑菇",
+            "2 Moon Cap",
             "medium"
         ),
         
         -- 绳子
         CreateCraftingTask(
-            "绳子", 
+            "Cut Grass", 
             "rope", 
             3, 
             function(player)
@@ -3412,13 +3801,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("cutgrass"))
                 end
             end,
-            "6个割下的草",
+            "6 Cut Grass",
             "easy"
         ),
         
         -- 木板
         CreateCraftingTask(
-            "木板", 
+            "Wooden Planks", 
             "boards", 
             3, 
             function(player)
@@ -3429,13 +3818,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("log"))
                 end
             end,
-            "4个木头",
+            "4 Wooden Logs",
             "easy"
         ),
         
         -- 石砖
         CreateCraftingTask(
-            "石砖", 
+            "Stone Bricks", 
             "cutstone", 
             3, 
             function(player)
@@ -3448,13 +3837,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("rocks"))
                 end
             end,
-            "6个石头",
+            "6 Stone",
             "easy"
         ),
         
         -- 莎草纸
         CreateCraftingTask(
-            "莎草纸", 
+            "Papyrus", 
             "papyrus", 
             3, 
             function(player)
@@ -3467,13 +3856,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("cutreeds"))
                 end
             end,
-            "6个芦苇",
+            "6 Reeds",
             "medium"
         ),
         
         -- 电子元件
         CreateCraftingTask(
-            "电子元件", 
+            "Transistor", 
             "transistor", 
             2, 
             function(player)
@@ -3484,13 +3873,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
                 end
             end,
-            "4个金块",
+            "4 Gold Nuggets",
             "medium"
         ),
         
         -- 蜂蜡
         CreateCraftingTask(
-            "蜂蜡", 
+            "Beeswax", 
             "beeswax", 
             2, 
             function(player)
@@ -3499,13 +3888,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("honeycomb"))
                 end
             end,
-            "2个蜂巢",
+            "2 Honeycomb",
             "medium"
         ),
         
         -- 大理石豌豆
         CreateCraftingTask(
-            "大理石豌豆", 
+            "Marble Bean", 
             "marblebean", 
             3, 
             function(player)
@@ -3515,13 +3904,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("marble"))
                 end
             end,
-            "3个大理石",
+            "3 Marble",
             "medium"
         ),
         
         -- 熊皮
         CreateCraftingTask(
-            "熊皮", 
+            "Bearger Fur", 
             "bearger_fur", 
             1, 
             function(player)
@@ -3532,13 +3921,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("meat"))
                 end
             end,
-            "4个肉",
+            "4 Meat",
             "hard"
         ),
         
         -- 噩梦燃料
         CreateCraftingTask(
-            "噩梦燃料", 
+            "Nightmare Fuel", 
             "nightmarefuel", 
             5, 
             function(player)
@@ -3546,13 +3935,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("purplegem"))
                 end
             end,
-            "1个紫宝石",
+            "1 Purple Gem",
             "medium"
         ),
         
         -- 紫宝石
         CreateCraftingTask(
-            "紫宝石", 
+            "Purple Gem", 
             "purplegem", 
             1, 
             function(player)
@@ -3561,7 +3950,7 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("bluegem"))
                 end
             end,
-            "1个红宝石和1个蓝宝石",
+            "1 Red Gem and 1 Blue Gem",
             "hard"
         )
     }
