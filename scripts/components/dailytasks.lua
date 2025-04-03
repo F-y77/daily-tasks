@@ -1,56 +1,3 @@
--- 在 DailyTasks 类定义之前添加这个辅助函数
-local function CountPlayerItems(player, prefab)
-    if not player.components.inventory then 
-        return 0 
-    end
-    
-    local count = 0
-    
-    -- 检查主背包
-    local items = player.components.inventory:FindItems(function(item)
-        return item.prefab == prefab
-    end)
-    
-    for _, item in ipairs(items) do
-        if item.components.stackable then
-            count = count + item.components.stackable:StackSize()
-        else
-            count = count + 1
-        end
-    end
-    
-    -- 检查装备栏
-    if player.components.inventory.equipslots then
-        for _, item in pairs(player.components.inventory.equipslots) do
-            if item.prefab == prefab then
-                if item.components.stackable then
-                    count = count + item.components.stackable:StackSize()
-                else
-                    count = count + 1
-                end
-            end
-        end
-    end
-    
-    -- 检查背包等容器
-    for container_inst, _ in pairs(player.components.inventory.opencontainers) do
-        if container_inst and container_inst.components and container_inst.components.container then
-            local container_items = container_inst.components.container:FindItems(function(item)
-                return item.prefab == prefab
-            end)
-            
-            for _, item in ipairs(container_items) do
-                if item.components.stackable then
-                    count = count + item.components.stackable:StackSize()
-                else
-                    count = count + 1
-                end
-            end
-        end
-    end
-    
-    return count
-end
 
 local DailyTasks = Class(function(self, inst)
     self.inst = inst
@@ -2999,28 +2946,6 @@ local DailyTasks = Class(function(self, inst)
                 end
             end,
             reward_description = "2个治疗药膏、1个生命注射器，以及8分钟的治疗效果提升(+20点)"
-        },
-        {
-            name = function()   
-                return DAILYTASKS.CONFIG.LANGUAGE == "en"   
-                    and "Simple Gathering" 
-                    or "简单采集"   
-            end,
-            description = function()
-                return "采集5个树枝"
-            end,
-            check = function(player)
-                if not player.components.inventory then return false end
-                local count = CountPlayerItems(player, "twigs")
-                return count >= 5
-            end,
-            reward = function(player)
-                if player.components.inventory then
-                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
-                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
-                end
-            end,
-            reward_description = "2个金块"
         },
         {
             name = function()   
