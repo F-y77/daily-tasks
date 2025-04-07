@@ -1,4 +1,3 @@
-
 local DailyTasks = Class(function(self, inst)
     self.inst = inst
     self.current_task = nil
@@ -26,14 +25,18 @@ local DailyTasks = Class(function(self, inst)
     local function CreateCraftingTask(name, prefab, count, reward_fn, reward_desc, difficulty)
         return {
             name = function() 
-                return DAILYTASKS.CONFIG.LANGUAGE == "en" 
-                    and "Craft " .. name 
-                    or "制作" .. name .. "任务"
+                if DAILYTASKS.CONFIG.LANGUAGE == "en" then
+                    return "Craft " .. name
+                else
+                    return "制作" .. name .. "任务"
+                end
             end,
             description = function() 
-                return DAILYTASKS.CONFIG.LANGUAGE == "en"
-                    and "Craft " .. count .. " " .. name
-                    or "制作" .. count .. "个" .. name 
+                if DAILYTASKS.CONFIG.LANGUAGE == "en" then
+                    return "Craft " .. count .. " " .. name
+                else
+                    return "制作" .. count .. "个" .. name 
+                end
             end,
             check = function(player)
                 if not player.components.inventory then return false end
@@ -43,7 +46,15 @@ local DailyTasks = Class(function(self, inst)
                 local items = player.components.inventory:FindItems(function(item)
                     return item.prefab == prefab
                 end)
-                found_count = #items
+                
+                -- 正确处理堆叠物品
+                for _, item in ipairs(items) do
+                    if item.components.stackable then
+                        found_count = found_count + item.components.stackable:StackSize()
+                    else
+                        found_count = found_count + 1
+                    end
+                end
                 
                 -- 检查装备栏
                 if player.components.inventory.equipslots then
@@ -60,7 +71,14 @@ local DailyTasks = Class(function(self, inst)
                         local container_items = container_inst.components.container:FindItems(function(item)
                             return item.prefab == prefab
                         end)
-                        found_count = found_count + (#container_items or 0)
+                        
+                        for _, item in ipairs(container_items) do
+                            if item.components.stackable then
+                                found_count = found_count + item.components.stackable:StackSize()
+                            else
+                                found_count = found_count + 1
+                            end
+                        end
                     end
                 end
                 
@@ -68,9 +86,11 @@ local DailyTasks = Class(function(self, inst)
             end,
             reward = reward_fn,
             reward_description = function()
-                return DAILYTASKS.CONFIG.LANGUAGE == "en"
-                    and reward_desc
-                    or "奖励: " .. reward_desc
+                if DAILYTASKS.CONFIG.LANGUAGE == "en" then
+                    return reward_desc
+                else
+                    return reward_desc
+                end
             end,
             difficulty = difficulty or "medium"
         }
@@ -101,6 +121,28 @@ local DailyTasks = Class(function(self, inst)
                     
                     for _, item in ipairs(items) do
                         count = count + (item.components.stackable and item.components.stackable:StackSize() or 1)
+                    end
+                    
+                    -- 检查装备栏
+                    if player.components.inventory.equipslots then
+                        for _, item in pairs(player.components.inventory.equipslots) do
+                            if item.prefab == "berries" or item.prefab == "berries_cooked" then
+                                count = count + (item.components.stackable and item.components.stackable:StackSize() or 1)
+                            end
+                        end
+                    end
+                    
+                    -- 检查背包等容器
+                    for container_inst, _ in pairs(player.components.inventory.opencontainers) do
+                        if container_inst and container_inst.components and container_inst.components.container then
+                            local container_items = container_inst.components.container:FindItems(function(item)
+                                return item.prefab == "berries" or item.prefab == "berries_cooked"
+                            end)
+                            
+                            for _, item in ipairs(container_items) do
+                                count = count + (item.components.stackable and item.components.stackable:StackSize() or 1)
+                            end
+                        end
                     end
                     
                     return count >= required

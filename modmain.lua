@@ -535,7 +535,8 @@ DAILYTASKS.TRANSLATIONS = {
 
 -- 修改翻译函数以支持更复杂的模式匹配
 DAILYTASKS.Translate = function(text)
-    if DAILYTASKS.CONFIG.LANGUAGE == "zh" then
+    -- 只有当语言设置为英文时才翻译
+    if DAILYTASKS.CONFIG.LANGUAGE ~= "en" then
         return text
     end
     
@@ -685,9 +686,9 @@ AddModRPCHandler("DailyTasks", "CheckTasks", function(player)
         
         if tasks.config.TASK_COUNT > 1 and #tasks.current_tasks > 0 then
             for i, task in ipairs(tasks.current_tasks) do
-                local task_name = type(task.name) == "function" and task.name() or DAILYTASKS.Translate(task.name)
-                local desc = type(task.description) == "function" and task.description() or DAILYTASKS.Translate(task.description)
-                local reward = type(task.reward_description) == "function" and task.reward_description() or DAILYTASKS.Translate(task.reward_description)
+                local task_name = type(task.name) == "function" and task.name() or task.name
+                local desc = type(task.description) == "function" and task.description() or task.description
+                local reward = type(task.reward_description) == "function" and task.reward_description() or task.reward_description
                 local status = tasks.tasks_completed[i] and DAILYTASKS.Translate("已完成") or DAILYTASKS.Translate("未完成")
                 
                 msg = msg .. "#" .. i .. ": " .. task_name .. "\n"
@@ -696,9 +697,9 @@ AddModRPCHandler("DailyTasks", "CheckTasks", function(player)
                 msg = msg .. DAILYTASKS.Translate("状态:") .. " " .. status .. "\n\n"
             end
         elseif tasks.current_task then
-            local task_name = type(tasks.current_task.name) == "function" and tasks.current_task.name() or DAILYTASKS.Translate(tasks.current_task.name)
-            local desc = type(tasks.current_task.description) == "function" and tasks.current_task.description() or DAILYTASKS.Translate(tasks.current_task.description)
-            local reward = type(tasks.current_task.reward_description) == "function" and tasks.current_task.reward_description() or DAILYTASKS.Translate(tasks.current_task.reward_description)
+            local task_name = type(tasks.current_task.name) == "function" and tasks.current_task.name() or tasks.current_task.name
+            local desc = type(tasks.current_task.description) == "function" and tasks.current_task.description() or tasks.current_task.description
+            local reward = type(tasks.current_task.reward_description) == "function" and tasks.current_task.reward_description() or tasks.current_task.reward_description
             local status = tasks.task_completed and DAILYTASKS.Translate("已完成") or DAILYTASKS.Translate("未完成")
             
             msg = msg .. task_name .. "\n"
@@ -800,7 +801,8 @@ end
 
 -- 在modmain.lua中添加一个函数来翻译任务名称和描述
 DAILYTASKS.TranslateTaskName = function(name)
-    if DAILYTASKS.CONFIG.LANGUAGE == "zh" then
+    -- 只有当语言设置为英文时才翻译
+    if DAILYTASKS.CONFIG.LANGUAGE ~= "en" then
         return name
     end
     
@@ -810,21 +812,30 @@ end
 
 -- 添加一个函数来翻译任务描述
 DAILYTASKS.TranslateTaskDescription = function(desc)
-    if DAILYTASKS.CONFIG.LANGUAGE == "zh" then
+    -- 只有当语言设置为英文时才翻译
+    if DAILYTASKS.CONFIG.LANGUAGE ~= "en" then
         return desc
     end
     
-    -- 首先尝试使用已有的翻译表
+    -- 首先尝试直接翻译
+    if DAILYTASKS.TRANSLATIONS[desc] then
+        return DAILYTASKS.TRANSLATIONS[desc]
+    end
+    
+    -- 尝试使用模式匹配翻译
     for pattern, replacement in pairs(DAILYTASKS.TRANSLATIONS) do
-        if string.find(pattern, "%%d%+") then
-            local number = string.match(desc, pattern)
+        if string.find(pattern, "%%d") then
+            local number = string.match(desc, "%d+")
             if number then
-                return string.format(replacement, number)
+                local test_text = string.gsub(desc, number, "%%d")
+                if test_text == pattern then
+                    return string.format(replacement, number)
+                end
             end
         end
     end
     
-    -- 如果没有匹配到，使用备用的模式匹配
+    -- 使用备用的模式匹配方法
     local count = desc:match("(%d+)")
     
     if desc:find("采集") and desc:find("浆果") then
@@ -845,21 +856,30 @@ end
 
 -- 添加一个函数来翻译奖励描述
 DAILYTASKS.TranslateRewardDescription = function(desc)
-    if DAILYTASKS.CONFIG.LANGUAGE == "zh" then
+    -- 只有当语言设置为英文时才翻译
+    if DAILYTASKS.CONFIG.LANGUAGE ~= "en" then
         return desc
     end
     
-    -- 首先尝试使用已有的翻译表
+    -- 首先尝试直接翻译
+    if DAILYTASKS.TRANSLATIONS[desc] then
+        return DAILYTASKS.TRANSLATIONS[desc]
+    end
+    
+    -- 尝试使用模式匹配翻译
     for pattern, replacement in pairs(DAILYTASKS.TRANSLATIONS) do
-        if string.find(pattern, "%%d%+") and string.find(pattern, "个") then
-            local number = string.match(desc, pattern)
+        if string.find(pattern, "%%d") then
+            local number = string.match(desc, "%d+")
             if number then
-                return string.format(replacement, number)
+                local test_text = string.gsub(desc, number, "%%d")
+                if test_text == pattern then
+                    return string.format(replacement, number)
+                end
             end
         end
     end
     
-    -- 如果没有匹配到，使用备用的模式匹配
+    -- 使用备用的模式匹配方法
     local count = desc:match("(%d+)")
     
     if desc:find("肉") then
