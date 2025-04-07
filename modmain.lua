@@ -552,7 +552,7 @@ DAILYTASKS.Translate = function(text)
             if number then
                 local test_text = string.gsub(text, number, "%%d")
                 if test_text == pattern then
-                    return string.format(replacement, number)
+                return string.format(replacement, number)
                 end
             end
         end
@@ -829,7 +829,7 @@ DAILYTASKS.TranslateTaskDescription = function(desc)
             if number then
                 local test_text = string.gsub(desc, number, "%%d")
                 if test_text == pattern then
-                    return string.format(replacement, number)
+                return string.format(replacement, number)
                 end
             end
         end
@@ -873,7 +873,7 @@ DAILYTASKS.TranslateRewardDescription = function(desc)
             if number then
                 local test_text = string.gsub(desc, number, "%%d")
                 if test_text == pattern then
-                    return string.format(replacement, number)
+                return string.format(replacement, number)
                 end
             end
         end
@@ -941,9 +941,9 @@ AddPrefabPostInit("monstertartare", function(inst)
                 local feeder = inst.components.inventoryitem.owner
                 if feeder and feeder:HasTag("player") and eater and eater:HasTag("player") then
                     feeder:PushEvent("feedplayer", {food = inst, target = eater})
-                end
             end
-        end)
+        end
+    end)
     end
 end)
 

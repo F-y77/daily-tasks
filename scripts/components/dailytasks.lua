@@ -129,8 +129,8 @@ local DailyTasks = Class(function(self, inst)
                             if item.prefab == "berries" or item.prefab == "berries_cooked" then
                                 count = count + (item.components.stackable and item.components.stackable:StackSize() or 1)
                             end
-                        end
                     end
+                end
                     
                     -- 检查背包等容器
                     for container_inst, _ in pairs(player.components.inventory.opencontainers) do
@@ -149,7 +149,7 @@ local DailyTasks = Class(function(self, inst)
                 end
                 return false
             end,
-            reward = function(player)
+            reward = function(player) 
                 if player.components.inventory then
                     local count = math.ceil(2 * self.config.REWARD_MULTIPLIER)
                     for i=1, count do
@@ -3475,7 +3475,7 @@ local DailyTasks = Class(function(self, inst)
         -- 添加新的制作物品任务
         -- 唤星者魔杖
         CreateCraftingTask(
-            "Star Caller's Staff", 
+            "唤星者魔杖", 
             "orangestaff", 
             1, 
             function(player)
@@ -3485,13 +3485,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "1 Purple Gem and 2 Nightmare Fuel",
+            "1个紫宝石和2个噩梦燃料",
             "hard"
         ),
 
         -- 懒人魔杖
         CreateCraftingTask(
-            "Lazy Explorer", 
+            "懒人魔杖", 
             "yellowstaff", 
             1, 
             function(player)
@@ -3501,13 +3501,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "1 Yellow Gem and 2 Nightmare Fuel",
+            "1个黄宝石和2个噩梦燃料",
             "hard"
         ),
 
         -- 拆解魔杖
         CreateCraftingTask(
-            "Deconstruction Staff", 
+            "拆解魔杖", 
             "greenstaff", 
             1, 
             function(player)
@@ -3517,13 +3517,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "1 Green Gem and 2 Nightmare Fuel",
+            "1个绿宝石和2个噩梦燃料",
             "hard"
         ),
 
         -- 多用斧镐
         CreateCraftingTask(
-            "Multitool Pick/Axe", 
+            "多用斧镐", 
             "multitool_axe_pickaxe", 
             1, 
             function(player)
@@ -3534,13 +3534,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("twigs"))
                 end
             end,
-            "2 Gold Nuggets and 2 Twigs",
+            "2个金块和2个树枝",
             "medium"
         ),
 
         -- 高级耕作先驱帽
         CreateCraftingTask(
-            "Soil Enhancement Hat", 
+            "高级耕作先驱帽", 
             "hat_soil", 
             1, 
             function(player)
@@ -3549,13 +3549,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("soil_amender"))
                 end
             end,
-            "2 Soil Amenders",
+            "2个堆肥",
             "medium"
         ),
 
         -- 铥矿皇冠
         CreateCraftingTask(
-            "Thulecite Crown", 
+            "铥矿皇冠", 
             "ruinshat", 
             1, 
             function(player)
@@ -3566,13 +3566,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "2 Thulecite and 2 Nightmare Fuel",
+            "2个铥矿和2个噩梦燃料",
             "hard"
         ),
 
         -- 铥矿甲
         CreateCraftingTask(
-            "Thulecite Suit", 
+            "铥矿甲", 
             "armorruins", 
             1, 
             function(player)
@@ -3583,13 +3583,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "2 Thulecite and 2 Nightmare Fuel",
+            "2个铥矿和2个噩梦燃料",
             "hard"
         ),
 
         -- 铥矿棒
         CreateCraftingTask(
-            "Thulecite Club", 
+            "铥矿棒", 
             "ruins_bat", 
             1, 
             function(player)
@@ -3600,13 +3600,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "2 Thulecite and 2 Nightmare Fuel",
+            "2个铥矿和2个噩梦燃料",
             "hard"
         ),
 
         -- 铥墙
         CreateCraftingTask(
-            "Thulecite Wall", 
+            "铥墙", 
             "wall_ruins_item", 
             4, 
             function(player)
@@ -3615,13 +3615,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("thulecite"))
                 end
             end,
-            "2 Thulecite",
+            "2个铥矿",
             "medium"
         ),
 
         -- 铥矿徽章
         CreateCraftingTask(
-            "Thulecite Medallion", 
+            "铥矿徽章", 
             "thulecite_medallion", 
             1, 
             function(player)
@@ -3632,13 +3632,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "2 Thulecite Fragments and 2 Nightmare Fuel",
+            "2个铥矿碎片和2个噩梦燃料",
             "medium"
         ),
 
         -- 懒人护符
         CreateCraftingTask(
-            "Lazy Amulet", 
+            "懒人护符", 
             "orangeamulet", 
             1, 
             function(player)
@@ -3648,13 +3648,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "1 Orange Gem and 2 Nightmare Fuel",
+            "1个橙宝石和2个噩梦燃料",
             "hard"
         ),
 
         -- 魔光护符
         CreateCraftingTask(
-            "Yellow Amulet", 
+            "魔光护符", 
             "yellowamulet", 
             1, 
             function(player)
@@ -3664,13 +3664,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "1 Yellow Gem and 2 Nightmare Fuel",
+            "1个黄宝石和2个噩梦燃料",
             "hard"
         ),
 
         -- 建造护符
         CreateCraftingTask(
-            "Green Amulet", 
+            "建造护符", 
             "greenamulet", 
             1, 
             function(player)
@@ -3680,13 +3680,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "1 Green Gem and 2 Nightmare Fuel",
+            "1个绿宝石和2个噩梦燃料",
             "hard"
         ),
 
         -- 眼睛炮塔
         CreateCraftingTask(
-            "Deerclops Eyeball", 
+            "眼睛炮塔", 
             "eyeturret_item", 
             1, 
             function(player)
@@ -3695,13 +3695,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("minotaurhorn"))
                 end
             end,
-            "1 Deerclops Eyeball and 1 Minotaur Horn",
+            "1个独眼巨鹿眼球和1个远古守护者角",
             "hard"
         ),
 
         -- 虚空长袍
         CreateCraftingTask(
-            "Void Cloth", 
+            "虚空长袍", 
             "armor_voidcloth", 
             1, 
             function(player)
@@ -3710,13 +3710,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("voidcloth"))
                 end
             end,
-            "2 Void Cloth",
+            "2个虚空布料",
             "hard"
         ),
 
         -- 虚空风帽
         CreateCraftingTask(
-            "Void Cloth Hat", 
+            "虚空风帽", 
             "hat_voidcloth", 
             1, 
             function(player)
@@ -3725,13 +3725,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("voidcloth"))
                 end
             end,
-            "2 Void Cloth",
+            "2个虚空布料",
             "hard"
         ),
 
         -- 暗影伞
         CreateCraftingTask(
-            "Shadow Tentacle", 
+            "暗影伞", 
             "shadowtentacle", 
             1, 
             function(player)
@@ -3741,13 +3741,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("nightmarefuel"))
                 end
             end,
-            "3 Nightmare Fuel",
+            "3个噩梦燃料",
             "medium"
         ),
 
         -- 暗影槌
         CreateCraftingTask(
-            "Lightning Goat Horn", 
+            "暗影槌", 
             "nightstick", 
             1, 
             function(player)
@@ -3756,13 +3756,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("lightninggoathorn"))
                 end
             end,
-            "2 Lightning Goat Horns",
+            "2个闪电羊角",
             "medium"
         ),
 
         -- 玻璃刀
         CreateCraftingTask(
-            "Moon Glass", 
+            "玻璃刀", 
             "glasscutter", 
             1, 
             function(player)
@@ -3772,13 +3772,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("moonglass"))
                 end
             end,
-            "3 Moon Fragments",
+            "3个月亮碎片",
             "medium"
         ),
         
         -- 月光玻璃斧
         CreateCraftingTask(
-            "Moon Glass Axe", 
+            "月光玻璃斧", 
             "moonglassaxe", 
             1, 
             function(player)
@@ -3788,13 +3788,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("moonglass"))
                 end
             end,
-            "3 Moon Fragments",
+            "3个月亮碎片",
             "medium"
         ),
         
         -- 月亮蘑菇帽
         CreateCraftingTask(
-            "Moon Cap", 
+            "月亮蘑菇帽", 
             "hat_mushroom", 
             1, 
             function(player)
@@ -3803,13 +3803,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("moon_cap"))
                 end
             end,
-            "2 Moon Cap",
+            "2个月亮蘑菇",
             "medium"
         ),
         
         -- 绳子
         CreateCraftingTask(
-            "Cut Grass", 
+            "绳子", 
             "rope", 
             3, 
             function(player)
@@ -3822,13 +3822,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("cutgrass"))
                 end
             end,
-            "6 Cut Grass",
+            "6个割下的草",
             "easy"
         ),
         
         -- 木板
         CreateCraftingTask(
-            "Wooden Planks", 
+            "木板", 
             "boards", 
             3, 
             function(player)
@@ -3839,13 +3839,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("log"))
                 end
             end,
-            "4 Wooden Logs",
+            "4个木头",
             "easy"
         ),
         
         -- 石砖
         CreateCraftingTask(
-            "Stone Bricks", 
+            "石砖", 
             "cutstone", 
             3, 
             function(player)
@@ -3858,13 +3858,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("rocks"))
                 end
             end,
-            "6 Stone",
+            "6个石头",
             "easy"
         ),
         
         -- 莎草纸
         CreateCraftingTask(
-            "Papyrus", 
+            "莎草纸", 
             "papyrus", 
             3, 
             function(player)
@@ -3877,13 +3877,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("cutreeds"))
                 end
             end,
-            "6 Reeds",
+            "6个芦苇",
             "medium"
         ),
         
         -- 电子元件
         CreateCraftingTask(
-            "Transistor", 
+            "电子元件", 
             "transistor", 
             2, 
             function(player)
@@ -3894,13 +3894,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
                 end
             end,
-            "4 Gold Nuggets",
+            "4个金块",
             "medium"
         ),
         
         -- 蜂蜡
         CreateCraftingTask(
-            "Beeswax", 
+            "蜂蜡", 
             "beeswax", 
             2, 
             function(player)
@@ -3909,13 +3909,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("honeycomb"))
                 end
             end,
-            "2 Honeycomb",
+            "2个蜂巢",
             "medium"
         ),
         
         -- 大理石豌豆
         CreateCraftingTask(
-            "Marble Bean", 
+            "大理石豌豆", 
             "marblebean", 
             3, 
             function(player)
@@ -3925,13 +3925,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("marble"))
                 end
             end,
-            "3 Marble",
+            "3个大理石",
             "medium"
         ),
         
         -- 熊皮
         CreateCraftingTask(
-            "Bearger Fur", 
+            "熊皮", 
             "bearger_fur", 
             1, 
             function(player)
@@ -3942,13 +3942,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("meat"))
                 end
             end,
-            "4 Meat",
+            "4个肉",
             "hard"
         ),
         
         -- 噩梦燃料
         CreateCraftingTask(
-            "Nightmare Fuel", 
+            "噩梦燃料", 
             "nightmarefuel", 
             5, 
             function(player)
@@ -3956,13 +3956,13 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("purplegem"))
                 end
             end,
-            "1 Purple Gem",
+            "1个紫宝石",
             "medium"
         ),
         
         -- 紫宝石
         CreateCraftingTask(
-            "Purple Gem", 
+            "紫宝石", 
             "purplegem", 
             1, 
             function(player)
@@ -3971,9 +3971,9 @@ local DailyTasks = Class(function(self, inst)
                     player.components.inventory:GiveItem(SpawnPrefab("bluegem"))
                 end
             end,
-            "1 Red Gem and 1 Blue Gem",
+            "1个红宝石和1个蓝宝石",
             "hard"
-        )
+        ),
     }
     
     -- 初始化
