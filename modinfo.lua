@@ -1,7 +1,18 @@
 name = "每日任务系统"
-description = "为玩家提供每日任务，完成后可获得奖励；问题已修复，现在中文100%是中文，英文有75%是英文。"
+description = [[
+
+为玩家提供每日任务，完成后可获得奖励。
+饥荒联机交流QQ群：1042944194
+群内有自行添加任务教学，为其他模组添加任务提供参考。
+
+Provide the player with daily tasks that can be completed with rewards.
+Famine online communication QQ group: 1042944194
+The teaching of self-adding task in the group provides reference for adding task in other modules.
+
+]]
+
 author = "凌（Va6gn）"
-version = "1.2.7"
+version = "1.2.8"
 
 forumthread = ""
 

@@ -1,0 +1,26 @@
+D:\Steam\steamapps\common\Don't Starve Together\mods\daily tasks\scripts\components\dailytasks
+找到你下的模组文件，打开这个dailytasks
+
+在3977行
+
+        CreateCraftingTask(
+            "紫宝石", --任务制作中文名
+            "purplegem", --代码名
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("redgem")) --奖励
+                    player.components.inventory:GiveItem(SpawnPrefab("bluegem"))
+                end
+            end,
+            "1个红宝石和1个蓝宝石",
+            "hard"
+        ),
+
+后面添加这种格式保存即可。
+
+然后将这个模组直接复制到D:\Steam\steamapps\common\Don't Starve Together\mods即可使用。
+
+
+
+

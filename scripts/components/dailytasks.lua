@@ -3974,6 +3974,185 @@ local DailyTasks = Class(function(self, inst)
             "1个红宝石和1个蓝宝石",
             "hard"
         ),
+        CreateCraftingTask(
+            "眼球炮塔", 
+            "eyeturret_item", 
+            1, 
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("deerclops_eyeball"))
+                end
+            end,
+            "1个巨鹿眼球",
+            "hard"
+        ),  
+        CreateCraftingTask(
+            "花瓣",
+            "petals",
+            1,
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("petals"))
+                    player.components.inventory:GiveItem(SpawnPrefab("petals"))
+                end
+            end,
+            "2个花瓣",
+            "easy"
+        ),
+        CreateCraftingTask(
+            "噩梦花瓣",
+            "petals_evil",
+            1,
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("nightmare_flower"))
+                end
+            end,
+            "1个噩梦花瓣",
+            "easy"
+        ),
+        CreateCraftingTask(
+            "木头",
+            "logs",
+            1,
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("logs"))
+                    player.components.inventory:GiveItem(SpawnPrefab("logs"))
+                    player.components.inventory:GiveItem(SpawnPrefab("logs"))
+                    player.components.inventory:GiveItem(SpawnPrefab("logs"))
+                end
+            end,
+            "4个木头",
+            "easy"
+        ),
+        CreateCraftingTask(
+            "石头",
+            "rocks",
+            1,
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("rocks"))
+                    player.components.inventory:GiveItem(SpawnPrefab("rocks"))
+                    player.components.inventory:GiveItem(SpawnPrefab("rocks"))
+                    player.components.inventory:GiveItem(SpawnPrefab("rocks"))
+                end
+            end,
+            "4个石头",
+            "easy"
+        ),
+        CreateCraftingTask(
+            "芦苇",
+            "cutreeds",
+            1,
+            function(player)
+                if player.components.inventory then 
+                    player.components.inventory:GiveItem(SpawnPrefab("cutreeds"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutreeds"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutreeds"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutreeds"))
+                end
+            end,
+            "4个芦苇",
+            "easy"
+        ),
+        CreateCraftingTask(
+            "金块",
+            "goldnugget",
+            1,
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                    player.components.inventory:GiveItem(SpawnPrefab("goldnugget"))
+                end
+            end,
+            "4个金块",
+            "easy"
+        ),
+        CreateCraftingTask(
+            "草",
+            "cutgrass",
+            1,
+            function(player)    
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("cutgrass"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutgrass"))   
+                    player.components.inventory:GiveItem(SpawnPrefab("cutgrass"))
+                    player.components.inventory:GiveItem(SpawnPrefab("cutgrass"))
+                end
+            end,
+            "4个草",
+            "easy"
+        ),
+        CreateCraftingTask(
+            "树枝",
+            "twigs",
+            1,
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("twigs"))
+                    player.components.inventory:GiveItem(SpawnPrefab("twigs"))
+                    player.components.inventory:GiveItem(SpawnPrefab("twigs"))
+                    player.components.inventory:GiveItem(SpawnPrefab("twigs"))
+                end
+            end,
+            "4个树枝",
+            "easy"
+        ),  
+        CreateCraftingTask(
+            "燧石",
+            "flint",
+            1,
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("flint"))
+                    player.components.inventory:GiveItem(SpawnPrefab("flint"))
+                    player.components.inventory:GiveItem(SpawnPrefab("flint"))
+                    player.components.inventory:GiveItem(SpawnPrefab("flint"))
+                end
+            end,
+            "4个燧石",
+            "easy"
+        ),
+        CreateCraftingTask(
+            "石果",
+            "rock_avocado_fruit",
+            1,
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("rock_avocado_fruit"))
+                    player.components.inventory:GiveItem(SpawnPrefab("rock_avocado_fruit"))
+                    player.components.inventory:GiveItem(SpawnPrefab("rock_avocado_fruit"))
+                    player.components.inventory:GiveItem(SpawnPrefab("rock_avocado_fruit"))
+                end
+            end,
+            "4个石果",
+            "easy"
+        ),  
+        CreateCraftingTask(
+            "荧光果",
+            "lightbulb  ",
+            1,
+            function(player)
+                if player.components.inventory then
+                    player.components.inventory:GiveItem(SpawnPrefab("lightbulb"))
+                    player.components.inventory:GiveItem(SpawnPrefab("lightbulb"))
+                    player.components.inventory:GiveItem(SpawnPrefab("lightbulb"))
+                    player.components.inventory:GiveItem(SpawnPrefab("lightbulb"))
+                end
+            end,
+            "4个荧光果",
+            "easy"
+        ),
+
+
+
+
+
+
+        
     }
     
     -- 初始化
